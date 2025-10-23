@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Announcements | Lecturer-Student Platform</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #2e7d32; /* Deep Green */
+            --secondary-color: #4caf50; /* Medium Green */
+            --background-light: #f9f9f9;
+            --card-background: #ffffff;
+            --shadow-light: rgba(0, 0, 0, 0.08);
+            --text-dark: #333;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+        }
+
+        .navbar {
+            background: var(--primary-color);
+            box-shadow: 0 4px 8px var(--shadow-light);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: #fff !important;
+        }
+
+        .announcement-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* --- Announcement Card Styling --- */
+        .announcement-card {
+            background: var(--card-background);
+            border-radius: 12px;
+            box-shadow: 0 6px 15px var(--shadow-light);
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border-left: 5px solid var(--secondary-color);
+            transition: all 0.3s ease;
+        }
+        .announcement-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .announcement-card h5 {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header-meta {
+            font-size: 0.85rem;
+            color: #777;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* Badge Styling */
+        .badge-base {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .badge-urgent { background-color: #dc3545; color: white; }
+        .badge-info { background-color: #17a2b8; color: white; }
+        .badge-reminder { background-color: #ffc107; color: #333; }
+
+        .btn-delete {
+            background: #dc3545;
+            color: #fff;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            margin-top: 10px;
+        }
+
+        /* Form Styling (Lecturer) */
+        #createAnnouncement .announcement-card {
+            border-left: 5px solid #007bff;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            color: #777;
+            font-size: 0.9rem;
+            margin-top: 2rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--secondary-color);
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg px-4">
+        <a class="navbar-brand" href="#">
+            <i class="bi bi-megaphone-fill me-2"></i> Announcement Dashboard
+        </a>
+        <div class="ms-auto text-white">
+            <span id="userEmail" class="me-3 small text-light"></span>
+            <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
+        </div>
+    </nav>
+
+    <div class="announcement-container">
+
+        <div id="createAnnouncement" class="mb-5" style="display:none;">
+            <div class="announcement-card">
+                <h5 class="text-primary fw-bold mb-3">Post New Announcement</h5>
+                <form id="announcementForm">
+                    <div class="row g-2">
+                        <div class="col-md-7">
+                            <input type="text" id="announcementTitle" class="form-control" placeholder="Title (e.g., Exam Postponed)" required />
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" id="announcementCourse" class="form-control" placeholder="Course Code (e.g., GNS101)" required />
+                        </div>
+                    </div>
+                    <div class="mb-3 mt-2">
+                        <textarea id="announcementContent" class="form-control" rows="3" placeholder="Content details..." required></textarea>
+                    </div>
+                    <div class="row align-items-center">
+                        <div class="col-md-4 mb-2 mb-md-0">
+                            <select id="announcementType" class="form-select">
+                                <option value="info">Info</option>
+                                <option value="reminder">Reminder</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <button type="submit" class="btn btn-success w-100">Post Announcement</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <h4 class="text-secondary fw-bold mb-4 text-center">Recent Updates 🚀</h4>
+        <div id="announcementList"></div>
+    </div>
+
+    <div id="toast" class="toast">Announcement posted ✅</div>
+
+    <footer>Lecturer-Student Platform © 2025</footer>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDT-7UYGrR_1_2HgosPNo8qGJNAGBCyHJg",
+            authDomain: "lecturer-student-project.firebaseapp.com",
+            projectId: "lecturer-student-project",
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const announcementList = document.getElementById("announcementList");
+        const createAnnouncementDiv = document.getElementById("createAnnouncement");
+        const announcementForm = document.getElementById("announcementForm");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const userEmailEl = document.getElementById("userEmail");
+        const toast = document.getElementById("toast");
+
+        let currentUser = null;
+        let isLecturer = false;
+        let currentUserName = "User";
+
+        // Helper to normalize course codes (removes spaces, converts to uppercase)
+        function normalizeCourseCode(code) {
+            if (!code) return "";
+            return code.trim().toUpperCase().replace(/\s/g, '');
+        }
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) return window.location.href = "login.html";
+
+            currentUser = user;
+            userEmailEl.textContent = user.email;
+
+            try {
+                const userDoc = await db.collection("users").doc(user.uid).get();
+                const userData = userDoc.data();
+                isLecturer = userData?.role === "lecturer";
+                currentUserName = userData?.name || user.email;
+
+                if (isLecturer) createAnnouncementDiv.style.display = "block";
+
+                loadAnnouncements();
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                announcementList.innerHTML = `<p class='text-center text-danger'>Error loading user profile. Check console for details.</p>`;
+            }
+        });
+
+        logoutBtn.addEventListener("click", async () => {
+            await auth.signOut();
+            window.location.href = "login.html";
+        });
+
+        announcementForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const title = document.getElementById("announcementTitle").value.trim();
+            const content = document.getElementById("announcementContent").value.trim();
+            const type = document.getElementById("announcementType").value;
+            let course = document.getElementById("announcementCourse").value.trim();
+
+            if (!title || !content || !course) return alert("All fields are required!");
+
+            // NORMALIZE COURSE CODE BEFORE SAVING
+            course = normalizeCourseCode(course); 
+
+            try {
+                await db.collection("announcements").add({
+                    title,
+                    content,
+                    type,
+                    course, // Saved as normalized course code (e.g., GNS101)
+                    author: currentUserName,
+                    authorEmail: currentUser.email,
+                    isGlobal: false, 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                announcementForm.reset();
+                showToast("Announcement posted ✅");
+                loadAnnouncements();
+            } catch (error) {
+                console.error("Error posting announcement:", error);
+                alert("Failed to post announcement. Check console for details.");
+            }
+        });
+
+        /**
+         * Helper function to get global announcements (Admin posts)
+         */
+       
+async function loadAnnouncements() {
+    const allAnnouncements = []; 
+    
+    announcementList.innerHTML = `<p class='text-center text-muted'><i class="bi bi-arrow-clockwise spinner-border spinner-border-sm me-2"></i> Loading announcements...</p>`;
+    
+    if (!currentUser) return;
+
+    try {
+        // SIMPLIFIED: Get ALL announcements and filter client-side
+        const allSnap = await db.collection("announcements")
+            .orderBy("createdAt", "desc")
+            .limit(50)
+            .get();
+        
+        const allAnnouncementsData = allSnap.docs.map(doc => {
+            const data = doc.data();
+            return { 
+                id: doc.id, 
+                ...data,
+                // Normalize content field
+                content: data.message || data.content || "",
+                // Normalize author field
+                author: data.createdByName || data.author || "Admin",
+                // Determine if global (no course code)
+                isGlobal: !data.course || data.course === "" || data.audience
+            };
+        });
+
+        // Filter based on user role
+        if (isLecturer) {
+            // Lecturers see: Their own posts + Global announcements
+            allAnnouncements.push(...allAnnouncementsData.filter(ann => 
+                ann.authorEmail === currentUser.email || ann.isGlobal
+            ));
+        } else {
+            // Students see: All course announcements + Global announcements
+            allAnnouncements.push(...allAnnouncementsData.filter(ann => 
+                !ann.isGlobal || ann.isGlobal
+            ));
+        }
+        
+        // Remove duplicates and sort
+        const uniqueAnnouncements = Array.from(new Map(allAnnouncements.map(item => [item.id, item])).values());
+        uniqueAnnouncements.sort((a, b) => (b.createdAt?.toDate()?.getTime() || 0) - (a.createdAt?.toDate()?.getTime() || 0));
+
+        renderAnnouncements(uniqueAnnouncements);
+        
+    } catch (error) {
+        console.error("Error loading announcements:", error);
+        announcementList.innerHTML = `<p class='alert alert-danger text-center'>Error loading announcements. Check console for details.</p>`;
+    }
+}
+
+// Renders the array of announcements - ADD THIS FUNCTION
+function renderAnnouncements(announcementArray) {
+    announcementList.innerHTML = "";
+    if (announcementArray.length === 0) {
+        announcementList.innerHTML = `<p class='alert alert-info text-center'>No announcements yet. Enjoy the quiet!</p>`;
+        return;
+    }
+
+    announcementArray.forEach(ann => {
+        const annType = ann.type || 'info'; 
+        const badgeClass = 
+            annType === "urgent" ? "badge-urgent" :
+            annType === "reminder" ? "badge-reminder" :
+            "badge-info";
+        const badgeText = annType.toUpperCase();
+
+        const annDiv = document.createElement("div");
+        annDiv.classList.add("announcement-card");
+
+        // CRITICAL FIX: Use createdByName for global, author for course posts
+        const authorDisplay = ann.isGlobal ? ann.createdByName || "Admin" : ann.author;
+        
+        const courseDisplay = ann.course ? `<strong>[${ann.course}]</strong> - ` : ''; 
+
+        const canDelete = isLecturer && ann.authorEmail === currentUser.email && !ann.isGlobal; 
+
+        annDiv.innerHTML = `
+            <h5>
+                ${ann.title} 
+                <span class="badge-base ${badgeClass}">${badgeText}</span>
+            </h5>
+            <p class="card-header-meta">
+                ${courseDisplay}Posted by <strong>${authorDisplay}</strong> • ${ann.createdAt?.toDate().toLocaleString() || "Just now"}
+            </p>
+            <p>${ann.content}</p>
+            ${canDelete ? `<button class="btn-delete" onclick="deleteAnnouncement('${ann.id}')"><i class="bi bi-trash"></i> Delete Post</button>` : ""}
+        `;
+        announcementList.appendChild(annDiv);
+    });
+}
+
+        window.deleteAnnouncement = async function(id) {
+            if (confirm("Are you sure you want to delete this announcement? This action cannot be undone.")) {
+                try {
+                    await db.collection("announcements").doc(id).delete();
+                    showToast("Announcement deleted ❌");
+                    await loadAnnouncements(); 
+                } catch (error) {
+                    console.error("Error deleting announcement:", error);
+                    alert("Failed to delete announcement. Check console for details.");
+                }
+            }
+        }
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.style.display = "block";
+            setTimeout(() => (toast.style.display = "none"), 2500);
+        }
+    </script>
+</body>
+</html>

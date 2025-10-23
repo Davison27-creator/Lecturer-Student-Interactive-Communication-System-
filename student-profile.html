@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Student Profile & Settings</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+:root {
+  --primary-color: #1565c0;
+  --primary-dark: #0d47a1;
+  --primary-light: #e3f2fd;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  --radius: 16px;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #333;
+  padding: 2rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.profile-container {
+  width: 100%;
+  max-width: 1000px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.content-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.content-title {
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 0.5rem;
+}
+
+.content-subtitle {
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+/* Form Styles */
+.form-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(248, 249, 250, 0.5);
+  border-radius: 12px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.section-title {
+  font-weight: 600;
+  color: #343a40;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title i {
+  color: var(--primary-color);
+}
+
+.form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-control {
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e1e5e9;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(21, 101, 192, 0.15);
+}
+
+.form-text {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 0.5rem;
+}
+
+.password-strength {
+  height: 4px;
+  background: #e9ecef;
+  border-radius: 2px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.password-strength-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.password-strength.weak .password-strength-bar {
+  background: #dc3545;
+  width: 33%;
+}
+
+.password-strength.medium .password-strength-bar {
+  background: #ffc107;
+  width: 66%;
+}
+
+.password-strength.strong .password-strength-bar {
+  background: #28a745;
+  width: 100%;
+}
+
+/* Buttons */
+.btn-primary-custom {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border: none;
+  color: white;
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(21, 101, 192, 0.2);
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(21, 101, 192, 0.3);
+}
+
+.btn-outline-custom {
+  border: 1px solid #dee2e6;
+  color: #6c757d;
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-custom:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.btn-danger-custom {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-danger-custom:hover {
+  background: #dc3545;
+  color: white;
+}
+
+/* Alerts */
+.alert-container {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 1050;
+  max-width: 400px;
+}
+
+.alert-custom {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  animation: slideInRight 0.5s ease;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* User Info Section */
+.user-info-section {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.avatar-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 5px solid white;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, var(--primary-light), white);
+}
+
+.avatar-overlay {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 36px;
+  height: 36px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.avatar-overlay:hover {
+  background: var(--primary-dark);
+  transform: scale(1.1);
+}
+
+.user-details h3 {
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 0.5rem;
+}
+
+.user-details p {
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.role-badge {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid var(--primary-color);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Loading States */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.spinner {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .user-info-section {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="alert-container" id="alertContainer"></div>
+
+<div class="profile-container">
+  <div class="content-header">
+    <h2 class="content-title">Student Profile & Settings</h2>
+    <p class="content-subtitle">Manage your personal information and account security</p>
+  </div>
+
+  <!-- User Info Section -->
+  <div class="user-info-section">
+    <div class="avatar-container">
+      <img id="avatarPreview" src="https://via.placeholder.com/120" alt="avatar" class="avatar" />
+      <div class="avatar-overlay" id="photoUploadTrigger">
+        <i class="bi bi-camera"></i>
+      </div>
+    </div>
+    <div class="user-details">
+      <h3 id="studentName">Loading...</h3>
+      <p id="studentEmail">user@example.com</p>
+      <p id="studentDepartment">Department: Loading...</p>
+      <p id="studentLevel">Level: Loading...</p>
+      <div class="role-badge" id="roleBadge">Student</div>
+    </div>
+  </div>
+
+  <!-- Real-time Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="coursesCount">0</div>
+      <div class="stat-label">Enrolled Courses</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="pendingAssignments">0</div>
+      <div class="stat-label">Pending Assignments</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="submittedAssignments">0</div>
+      <div class="stat-label">Submitted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="gradedAssignments">0</div>
+      <div class="stat-label">Graded</div>
+    </div>
+  </div>
+
+  <!-- Personal Information -->
+  <div class="form-section">
+    <h4 class="section-title"><i class="bi bi-person"></i> Personal Information</h4>
+    
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="fullName" class="form-label">Full Name *</label>
+        <input type="text" class="form-control" id="fullName" placeholder="Your full name" required>
+      </div>
+      <div class="col-md-6">
+        <label for="studentId" class="form-label">Student ID</label>
+        <input type="text" class="form-control" id="studentId" placeholder="Your student ID">
+      </div>
+      <div class="col-md-6">
+        <label for="department" class="form-label">Department</label>
+        <select class="form-control" id="department">
+          <option value="">Select department</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Statistics">Statistics</option>
+          <option value="Science Laboratory Technology">Science Laboratory Technology</option>
+          <option value="Marine Engineering">Marine Engineering</option>
+          <option value="Fisheries">Fisheries</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="level" class="form-label">Level</label>
+        <select class="form-control" id="level">
+          <option value="">Select level</option>
+          <option value="ND1">ND1</option>
+          <option value="ND2">ND2</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Contact Information -->
+  <div class="form-section">
+    <h4 class="section-title"><i class="bi bi-envelope"></i> Contact Information</h4>
+    
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="email" class="form-label">Email Address *</label>
+        <input type="email" class="form-control" id="email" placeholder="your.email@example.com" required>
+        <div class="form-text">This email will be used for account notifications</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Password Change -->
+  <div class="form-section">
+    <h4 class="section-title"><i class="bi bi-shield-lock"></i> Change Password</h4>
+    
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="currentPassword" class="form-label">Current Password *</label>
+        <input type="password" class="form-control" id="currentPassword" placeholder="••••••" required>
+        <div class="form-text">Required to change email or password</div>
+      </div>
+      <div class="col-md-6">
+        <label for="newPassword" class="form-label">New Password</label>
+        <input type="password" class="form-control" id="newPassword" placeholder="•••••• (min 6 characters)">
+        <div class="password-strength" id="passwordStrength">
+          <div class="password-strength-bar"></div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+        <input type="password" class="form-control" id="confirmPassword" placeholder="••••••">
+      </div>
+    </div>
+  </div>
+  
+  <!-- Action Buttons -->
+  <div class="d-flex gap-2 flex-wrap">
+    <button id="saveProfileBtn" class="btn btn-primary-custom">
+      <span class="spinner d-none" id="profileSpinner"></span>
+      Save All Changes
+    </button>
+    <button id="signOutBtn" class="btn btn-outline-custom">Sign Out</button>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="form-section mt-4">
+    <h4 class="section-title text-danger"><i class="bi bi-exclamation-triangle"></i> Danger Zone</h4>
+    <p class="form-text text-danger mb-3">These actions are irreversible. Please proceed with caution.</p>
+    
+    <button id="deleteAccountBtn" class="btn btn-danger-custom">Delete Account Permanently</button>
+  </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="photoInput" accept="image/*" style="display: none">
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Firebase Auth & Firestore -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<script>
+// Configuration
+const SUPABASE_URL = "https://jkbbxyxpvwyrwuscujwj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprYmJ4eXhwdnd5cnd1c2N1andqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMzg5MjUsImV4cCI6MjA3MzgxNDkyNX0.aTcdR870dKn5bXMDm06wrCDnp7usG8qcU-BaS81ubP4"; 
+const BUCKET_NAME = "Lecturer-Student Storage"; 
+
+// Initialize services
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDT-7UYGrR_1_2HgosPNo8qGJNAGBCyHJg",
+  authDomain: "lecturer-student-project.firebaseapp.com",
+  projectId: "lecturer-student-project",
+  storageBucket: "lecturer-student-project.appspot.com",
+  messagingSenderId: "266517931898",
+  appId: "1:266517931898:web:f48b4af12fdc81001058c3"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Global variables
+let currentUser = null;
+let userDocRef = null;
+let userData = null;
+let localPhotoFile = null;
+
+// DOM Elements
+const alertContainer = document.getElementById('alertContainer');
+const avatarPreview = document.getElementById('avatarPreview');
+const photoInput = document.getElementById('photoInput');
+const photoUploadTrigger = document.getElementById('photoUploadTrigger');
+const studentName = document.getElementById('studentName');
+const studentEmail = document.getElementById('studentEmail');
+const studentDepartment = document.getElementById('studentDepartment');
+const studentLevel = document.getElementById('studentLevel');
+const roleBadge = document.getElementById('roleBadge');
+
+// Stats elements
+const coursesCount = document.getElementById('coursesCount');
+const pendingAssignments = document.getElementById('pendingAssignments');
+const submittedAssignments = document.getElementById('submittedAssignments');
+const gradedAssignments = document.getElementById('gradedAssignments');
+
+// Form elements
+const fullNameEl = document.getElementById('fullName');
+const studentIdEl = document.getElementById('studentId');
+const departmentEl = document.getElementById('department');
+const levelEl = document.getElementById('level');
+const emailEl = document.getElementById('email');
+const currentPasswordEl = document.getElementById('currentPassword');
+const newPasswordEl = document.getElementById('newPassword');
+const confirmPasswordEl = document.getElementById('confirmPassword');
+const passwordStrength = document.getElementById('passwordStrength');
+
+// Buttons
+const saveProfileBtn = document.getElementById('saveProfileBtn');
+const signOutBtn = document.getElementById('signOutBtn');
+const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+
+// Spinners
+const profileSpinner = document.getElementById('profileSpinner');
+
+// Utility Functions
+function showAlert(message, type = 'success', duration = 5000) {
+  const alertId = 'alert-' + Date.now();
+  const alertHTML = `
+    <div id="${alertId}" class="alert alert-${type} alert-custom alert-dismissible fade show">
+      <div class="d-flex align-items-center">
+        <i class="bi ${type === 'success' ? 'bi-check-circle' : type === 'danger' ? 'bi-exclamation-triangle' : 'bi-info-circle'} me-2"></i>
+        <div>${message}</div>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  `;
+  
+  alertContainer.insertAdjacentHTML('beforeend', alertHTML);
+  
+  if (duration > 0) {
+    setTimeout(() => {
+      const alertElement = document.getElementById(alertId);
+      if (alertElement) {
+        alertElement.classList.remove('show');
+        setTimeout(() => alertElement.remove(), 300);
+      }
+    }, duration);
+  }
+}
+
+function setLoadingState(button, spinner, isLoading) {
+  button.disabled = isLoading;
+  if (spinner) {
+    spinner.classList.toggle('d-none', !isLoading);
+  }
+}
+
+function validatePassword(password) {
+  if (password.length < 6) {
+    return { valid: false, strength: 'weak', message: 'Password must be at least 6 characters' };
+  }
+  
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  
+  let strength = 'weak';
+  let score = 0;
+  
+  if (hasUpperCase && hasLowerCase) score++;
+  if (hasNumbers) score++;
+  if (password.length >= 8) score++;
+  
+  if (score >= 2) strength = 'strong';
+  else if (score >= 1) strength = 'medium';
+  
+  return { valid: true, strength, message: '' };
+}
+
+function updatePasswordStrength() {
+  const password = newPasswordEl.value;
+  const validation = validatePassword(password);
+  
+  passwordStrength.className = 'password-strength';
+  if (password.length > 0) {
+    passwordStrength.classList.add(validation.strength);
+  }
+}
+
+// Photo upload functionality
+photoUploadTrigger.addEventListener('click', () => {
+  photoInput.click();
+});
+
+photoInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+  if (!allowedTypes.includes(file.type)) {
+    showAlert('Please select a JPG or PNG image file', 'danger');
+    photoInput.value = '';
+    return;
+  }
+  
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showAlert('File too large. Maximum size is 5MB', 'danger');
+    photoInput.value = '';
+    return;
+  }
+  
+  localPhotoFile = file;
+  
+  // Preview image
+  const reader = new FileReader();
+  reader.onload = () => {
+    avatarPreview.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+  
+  showAlert('Photo selected. Remember to save your changes.', 'info');
+});
+
+// Password strength indicator
+newPasswordEl.addEventListener('input', updatePasswordStrength);
+
+// Load real-time user statistics
+async function loadUserStats(userId) {
+  try {
+    // Count enrolled courses
+    const enrolledCourses = await db.collection("studentCourses")
+      .where("studentId", "==", userId)
+      .get();
+    coursesCount.textContent = enrolledCourses.size;
+
+    // Count assignments by status
+    const submissionsSnap = await db.collection("submissions")
+      .where("studentId", "==", userId)
+      .get();
+
+    let pendingCount = 0;
+    let submittedCount = 0;
+    let gradedCount = 0;
+
+    submissionsSnap.forEach(doc => {
+      const submission = doc.data();
+      if (submission.grade) {
+        gradedCount++;
+      } else if (submission.submittedAt) {
+        submittedCount++;
+      } else {
+        pendingCount++;
+      }
+    });
+
+    pendingAssignments.textContent = pendingCount;
+    submittedAssignments.textContent = submittedCount;
+    gradedAssignments.textContent = gradedCount;
+
+  } catch (error) {
+    console.error("Error loading user stats:", error);
+  }
+}
+
+// Authentication state listener
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  currentUser = user;
+  userDocRef = db.collection('users').doc(user.uid);
+  
+  try {
+    const doc = await userDocRef.get();
+    if (!doc.exists) {
+      await auth.signOut();
+      window.location.href = 'login.html';
+      return;
+    }
+    
+    userData = doc.data();
+    
+    // Verify student role
+    if (userData.role !== 'student') {
+      showAlert('Access denied. Student accounts only.', 'danger', 3000);
+      setTimeout(async () => {
+        await auth.signOut();
+        window.location.href = 'login.html';
+      }, 2000);
+      return;
+    }
+    
+    // Update UI with user data
+    updateUIWithUserData();
+    
+    // Load real-time user stats
+    loadUserStats(user.uid);
+    
+  } catch (err) {
+    console.error('Error loading user data:', err);
+    showAlert('Failed to load profile data', 'danger');
+  }
+});
+
+function updateUIWithUserData() {
+  // Basic info
+  studentName.textContent = userData.name || 'Student';
+  studentEmail.textContent = userData.email || currentUser.email || 'user@example.com';
+  studentDepartment.textContent = `Department: ${userData.department || 'Not set'}`;
+  studentLevel.textContent = `Level: ${userData.level || 'Not set'}`;
+  roleBadge.textContent = userData.role ? `Role: ${userData.role.charAt(0).toUpperCase() + userData.role.slice(1)}` : 'Role: Student';
+  
+  // Profile form
+  fullNameEl.value = userData.name || '';
+  studentIdEl.value = userData.studentId || '';
+  departmentEl.value = userData.department || '';
+  levelEl.value = userData.level || '';
+  emailEl.value = userData.email || currentUser.email || '';
+  
+  // Avatar
+  if (userData.photoURL) {
+    avatarPreview.src = userData.photoURL;
+  } else if (currentUser.photoURL) {
+    avatarPreview.src = currentUser.photoURL;
+  }
+}
+
+// Save profile
+saveProfileBtn.addEventListener('click', async () => {
+  const newName = fullNameEl.value.trim();
+  const newStudentId = studentIdEl.value.trim();
+  const newDepartment = departmentEl.value;
+  const newLevel = levelEl.value;
+  const newEmail = emailEl.value.trim();
+  const currentPassword = currentPasswordEl.value;
+  const newPassword = newPasswordEl.value;
+  const confirmPassword = confirmPasswordEl.value;
+  
+  // Validation
+  if (!newName) {
+    showAlert('Full name is required', 'danger');
+    return;
+  }
+  
+  if (newEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+    showAlert('Please enter a valid email address', 'danger');
+    return;
+  }
+  
+  // Check if password change is requested
+  if ((newEmail && newEmail !== currentUser.email) || newPassword) {
+    if (!currentPassword) {
+      showAlert('Current password is required to change email or password', 'danger');
+      return;
+    }
+  }
+  
+  if (newPassword) {
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.valid) {
+      showAlert(passwordValidation.message, 'danger');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      showAlert('New password and confirmation do not match', 'danger');
+      return;
+    }
+  }
+  
+  setLoadingState(saveProfileBtn, profileSpinner, true);
+  
+  try {
+    let photoURL = userData.photoURL || currentUser.photoURL || null;
+    
+    // Upload new photo if selected
+    if (localPhotoFile) {
+      const filePath = `student_profile_pics/${currentUser.uid}/${Date.now()}_${localPhotoFile.name.replace(/\s+/g, '_')}`;
+      const { error } = await supabase.storage.from(BUCKET_NAME).upload(filePath, localPhotoFile, { upsert: true });
+      
+      if (error) throw error;
+      
+      const { data: urlData, error: urlErr } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
+      if (urlErr) throw urlErr;
+      
+      photoURL = urlData.publicUrl;
+      
+      // Update Firebase auth profile
+      try {
+        await currentUser.updateProfile({ photoURL });
+      } catch (e) {
+        console.warn('Failed to update auth profile photo:', e);
+      }
+    }
+    
+    // Reauthenticate if changing email or password
+    if ((newEmail && newEmail !== currentUser.email) || newPassword) {
+      const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, currentPassword);
+      await currentUser.reauthenticateWithCredential(credential);
+    }
+    
+    // Update email if changed
+    if (newEmail && newEmail !== currentUser.email) {
+      await currentUser.updateEmail(newEmail);
+    }
+    
+    // Update password if changed
+    if (newPassword) {
+      await currentUser.updatePassword(newPassword);
+    }
+    
+    // Update Firestore document
+    await userDocRef.set({
+      name: newName,
+      studentId: newStudentId,
+      department: newDepartment,
+      level: newLevel,
+      email: newEmail || currentUser.email,
+      photoURL: photoURL || '',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    
+    // Update local data
+    const updatedDoc = await userDocRef.get();
+    userData = updatedDoc.data();
+    
+    // Update UI
+    updateUIWithUserData();
+    
+    // Clear password fields
+    currentPasswordEl.value = '';
+    newPasswordEl.value = '';
+    confirmPasswordEl.value = '';
+    passwordStrength.className = 'password-strength';
+    
+    showAlert('Profile updated successfully', 'success');
+    localPhotoFile = null;
+    
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    
+    if (error.code === 'auth/wrong-password') {
+      showAlert('Current password is incorrect', 'danger');
+    } else if (error.code === 'auth/requires-recent-login') {
+      showAlert('Security verification required. Please enter your current password.', 'danger');
+    } else {
+      showAlert('Failed to update profile: ' + error.message, 'danger');
+    }
+  } finally {
+    setLoadingState(saveProfileBtn, profileSpinner, false);
+  }
+});
+
+// Sign out
+signOutBtn.addEventListener('click', async () => {
+  try {
+    await auth.signOut();
+    window.location.href = 'login.html';
+  } catch (error) {
+    console.error('Error signing out:', error);
+    showAlert('Failed to sign out', 'danger');
+  }
+});
+
+// Delete account
+deleteAccountBtn.addEventListener('click', async () => {
+  const confirmation = prompt(`To confirm account deletion, type "DELETE MY ACCOUNT" exactly as shown:`);
+  if (confirmation !== "DELETE MY ACCOUNT") {
+    showAlert('Account deletion cancelled', 'info');
+    return;
+  }
+  
+  if (!confirm('⚠️ FINAL WARNING: This will permanently delete all your data, courses, and submissions. This cannot be undone!')) {
+    return;
+  }
+  
+  try {
+    deleteAccountBtn.disabled = true;
+    deleteAccountBtn.innerHTML = '<span class="spinner"></span> Deleting...';
+    
+    // Delete user document
+    await userDocRef.delete();
+    
+    // Delete user account
+    await currentUser.delete();
+    
+    showAlert('Account deleted successfully. Redirecting...', 'success', 2000);
+    setTimeout(() => window.location.href = 'login.html', 1500);
+    
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    
+    if (error.code === 'auth/requires-recent-login') {
+      showAlert('To delete your account, please reauthenticate by entering your current password', 'danger');
+    } else {
+      showAlert('Failed to delete account: ' + error.message, 'danger');
+    }
+    
+    deleteAccountBtn.disabled = false;
+    deleteAccountBtn.textContent = 'Delete Account Permanently';
+  }
+});
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

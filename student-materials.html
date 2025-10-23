@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Materials - Student Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #1565c0;
+      --primary-dark: #0d47a1;
+      --primary-light: #e3f2fd;
+      --success-color: #2e7d32;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .navbar {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .container-main {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .page-header {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      margin: 2rem 0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      border-left: 5px solid var(--success-color);
+    }
+    
+    .material-card {
+      border: none;
+      border-radius: 1rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      height: 100%;
+      background: white;
+    }
+    
+    .material-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+    }
+    
+    .material-icon {
+      font-size: 2.5rem;
+      color: var(--success-color);
+      margin-bottom: 1rem;
+    }
+    
+    .file-type-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.8rem;
+    }
+    
+    .course-filter {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #6c757d;
+    }
+    
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .stats-card {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    
+    .back-btn {
+      background: var(--primary-light);
+      color: var(--primary-color);
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .back-btn:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-main">
+      <a class="navbar-brand fw-bold" href="#">
+        <i class="bi bi-mortarboard-fill"></i> Student Portal
+      </a>
+      <div class="d-flex align-items-center">
+        <a href="student-dashboard.html" class="back-btn me-3">
+          <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+        <span class="text-light me-3 d-none d-md-block">Course Materials</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-main">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1 class="fw-bold text-dark mb-2">
+            <i class="bi bi-file-earmark-text"></i> Course Materials
+          </h1>
+          <p class="text-muted mb-0">Access all learning materials from your enrolled courses</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <div class="stats-card">
+            <div class="stats-number" id="materialsCount">0</div>
+            <div>Available Materials</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Course Filter -->
+    <div class="course-filter">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h5 class="mb-3">Filter Materials</h5>
+        </div>
+        <div class="col-md-6">
+          <select class="form-select" id="courseFilter">
+            <option value="">All Courses</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" id="searchInput" placeholder="Search materials by title or course...">
+          <button class="btn btn-outline-secondary" type="button" id="clearSearch">
+            <i class="bi bi-x"></i> Clear
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Materials Grid -->
+    <div id="materialsList" class="row g-4">
+      <div class="col-12 text-center py-5">
+        <div class="loading-spinner"></div>
+        <p class="mt-3 text-muted">Loading your course materials...</p>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state d-none">
+      <i class="bi bi-folder2-open"></i>
+      <h4 class="mb-3">No Materials Available</h4>
+      <p class="text-muted mb-4">No materials have been uploaded for your enrolled courses yet.</p>
+      <a href="student-dashboard.html" class="btn btn-primary">
+        <i class="bi bi-house"></i> Return to Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDT-7UYGrR_1_2HgosPNo8qGJNAGBCyHJg",
+      authDomain: "lecturer-student-project.firebaseapp.com",
+      projectId: "lecturer-student-project",
+      storageBucket: "lecturer-student-project.appspot.com",
+      messagingSenderId: "266517931898",
+      appId: "1:266517931898:web:f48b4af12fdc81001058c3"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const materialsList = document.getElementById("materialsList");
+    const emptyState = document.getElementById("emptyState");
+    const materialsCount = document.getElementById("materialsCount");
+    const courseFilter = document.getElementById("courseFilter");
+    const searchInput = document.getElementById("searchInput");
+    const clearSearch = document.getElementById("clearSearch");
+
+    let allMaterials = [];
+    let joinedCourses = [];
+
+    // Utility function to get file icon
+    function getFileIcon(fileName) {
+      const ext = fileName ? fileName.split('.').pop().toLowerCase() : '';
+      const iconMap = {
+        'pdf': 'bi-file-earmark-pdf',
+        'doc': 'bi-file-earmark-word',
+        'docx': 'bi-file-earmark-word',
+        'ppt': 'bi-file-earmark-ppt',
+        'pptx': 'bi-file-earmark-ppt',
+        'xls': 'bi-file-earmark-excel',
+        'xlsx': 'bi-file-earmark-excel',
+        'txt': 'bi-file-earmark-text',
+        'zip': 'bi-file-earmark-zip'
+      };
+      return iconMap[ext] || 'bi-file-earmark-text';
+    }
+
+    // Utility function to get file type badge
+    function getFileTypeBadge(fileName) {
+      const ext = fileName ? fileName.split('.').pop().toUpperCase() : 'FILE';
+      const colorMap = {
+        'PDF': 'bg-danger',
+        'DOC': 'bg-primary',
+        'DOCX': 'bg-primary',
+        'PPT': 'bg-warning',
+        'PPTX': 'bg-warning',
+        'XLS': 'bg-success',
+        'XLSX': 'bg-success',
+        'ZIP': 'bg-secondary'
+      };
+      return colorMap[ext] || 'bg-dark';
+    }
+
+    // Format date
+    function formatDate(date) {
+      if (!date) return "Unknown date";
+      try {
+        const dateObj = date.toDate ? date.toDate() : new Date(date);
+        return dateObj.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return "Unknown date";
+      }
+    }
+
+    // Filter and display materials
+    function displayMaterials() {
+      const selectedCourse = courseFilter.value;
+      const searchTerm = searchInput.value.toLowerCase();
+
+      const filteredMaterials = allMaterials.filter(material => {
+        const matchesCourse = !selectedCourse || material.courseId === selectedCourse;
+        const matchesSearch = !searchTerm || 
+          material.materialTitle.toLowerCase().includes(searchTerm) ||
+          material.courseTitle.toLowerCase().includes(searchTerm) ||
+          material.courseCode.toLowerCase().includes(searchTerm);
+        
+        return matchesCourse && matchesSearch;
+      });
+
+      materialsCount.textContent = filteredMaterials.length;
+
+      if (filteredMaterials.length === 0) {
+        materialsList.innerHTML = '';
+        emptyState.classList.remove('d-none');
+        return;
+      }
+
+      emptyState.classList.add('d-none');
+      materialsList.innerHTML = '';
+
+      filteredMaterials.forEach(material => {
+        const fileIcon = getFileIcon(material.fileName);
+        const fileTypeBadge = getFileTypeBadge(material.fileName);
+        const createdAt = formatDate(material.createdAt);
+        const fileSize = material.fileSize ? `(${(material.fileSize / (1024 * 1024)).toFixed(2)} MB)` : '';
+
+        const col = document.createElement("div");
+        col.className = "col-md-6 col-lg-4";
+
+        col.innerHTML = `
+          <div class="card material-card p-3 h-100 position-relative">
+            <span class="badge ${fileTypeBadge} file-type-badge">${material.fileName ? material.fileName.split('.').pop().toUpperCase() : 'FILE'}</span>
+            
+            <div class="text-center mb-3">
+              <i class="bi ${fileIcon} material-icon"></i>
+            </div>
+            
+            <h5 class="card-title mb-2">${material.materialTitle || "Untitled Material"}</h5>
+            
+            <div class="card-text small mb-3">
+              <p class="mb-1"><strong>Course:</strong> ${material.courseTitle || material.courseCode || "Unknown Course"}</p>
+              <p class="mb-1"><strong>Uploaded:</strong> ${createdAt}</p>
+              ${material.fileName ? `<p class="mb-1"><strong>File:</strong> ${material.fileName} ${fileSize}</p>` : ''}
+            </div>
+            
+            <div class="mt-auto">
+              <a href="${material.fileURL}" target="_blank" class="btn btn-success w-100">
+                <i class="bi bi-download"></i> Download
+              </a>
+            </div>
+          </div>`;
+        
+        materialsList.appendChild(col);
+      });
+    }
+
+    // Load course materials
+    async function loadCourseMaterials(user) {
+      try {
+        // Get the list of courses the student joined
+        const studentCoursesSnap = await db.collection("studentCourses")
+          .where("studentId", "==", user.uid)
+          .get();
+
+        if (studentCoursesSnap.empty) {
+          showEmptyState("You haven't joined any courses yet.");
+          return;
+        }
+
+        joinedCourses = studentCoursesSnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // Populate course filter
+        populateCourseFilter();
+
+        allMaterials = [];
+        const materialPromises = [];
+
+        // Fetch all materials for joined course IDs
+        for (const course of joinedCourses) {
+          const promise = db.collection("materials")
+            .where("courseId", "==", course.courseId)
+            .orderBy("createdAt", "desc")
+            .get()
+            .then(materialsSnap => {
+              materialsSnap.forEach(doc => {
+                allMaterials.push({ 
+                  id: doc.id, 
+                  ...doc.data(),
+                  joinedCourseData: course
+                });
+              });
+            });
+          
+          materialPromises.push(promise);
+        }
+
+        await Promise.all(materialPromises);
+
+        // If no materials found
+        if (allMaterials.length === 0) {
+          showEmptyState("No materials uploaded for your enrolled courses yet.");
+          return;
+        }
+
+        // Display materials
+        displayMaterials();
+
+      } catch (error) {
+        console.error("Error fetching materials:", error);
+        showEmptyState("Error loading materials. Please refresh the page.");
+      }
+    }
+
+    function populateCourseFilter() {
+      courseFilter.innerHTML = '<option value="">All Courses</option>';
+      
+      const uniqueCourses = [];
+      const addedCourseIds = new Set();
+      
+      joinedCourses.forEach(course => {
+        if (!addedCourseIds.has(course.courseId)) {
+          uniqueCourses.push(course);
+          addedCourseIds.add(course.courseId);
+        }
+      });
+      
+      uniqueCourses.forEach(course => {
+        const option = document.createElement('option');
+        option.value = course.courseId;
+        option.textContent = course.courseName || course.courseCode || 'Unknown Course';
+        courseFilter.appendChild(option);
+      });
+    }
+
+    function showEmptyState(message) {
+      materialsList.innerHTML = '';
+      emptyState.querySelector('p').textContent = message;
+      emptyState.classList.remove('d-none');
+      materialsCount.textContent = '0';
+    }
+
+    // Event listeners
+    courseFilter.addEventListener('change', displayMaterials);
+    searchInput.addEventListener('input', displayMaterials);
+    
+    clearSearch.addEventListener('click', () => {
+      searchInput.value = '';
+      displayMaterials();
+    });
+
+    // Authentication state listener
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        // Verify user is a student
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (!userDoc.exists || userDoc.data().role !== 'student') {
+          alert("Access denied. Student accounts only.");
+          window.location.href = "login.html";
+          return;
+        }
+
+        await loadCourseMaterials(user);
+
+      } catch (error) {
+        console.error("Authentication error:", error);
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>

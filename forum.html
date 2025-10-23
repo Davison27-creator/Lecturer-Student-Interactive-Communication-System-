@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Community Forum</title>
+
+  <!-- Bootstrap & icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-green: #1b5e20;
+      --secondary-green: #2e7d32;
+      --light-green: #e8f5e9;
+      --lighter-green: #f4fdf6;
+      --accent-yellow: #ffbf00;
+      --danger-red: #b71c1c;
+      --text-muted: #666;
+      --text-light: #8a8a8a;
+      --card-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      --card-shadow-hover: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    body { 
+      font-family: "Poppins", sans-serif; 
+      background: linear-gradient(135deg, var(--lighter-green), var(--light-green)); 
+      min-height: 100vh;
+      padding-bottom: 2rem;
+    }
+    
+    .navbar { 
+      background: linear-gradient(135deg, var(--primary-green), var(--secondary-green)); 
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .navbar-brand { 
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .navbar .btn { 
+      border-radius: 999px; 
+      font-weight: 500;
+    }
+    
+    .container-main { 
+      max-width: 1000px; 
+      margin: 2rem auto; 
+      padding: 1rem; 
+    }
+    
+    .create-post, .post-card { 
+      background: #fff; 
+      border-radius: 12px; 
+      box-shadow: var(--card-shadow);
+      margin-bottom: 1.5rem; 
+      padding: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .post-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--card-shadow-hover);
+    }
+    
+    .comment { 
+      background: #f6fcf7; 
+      border-left: 3px solid #81c784; 
+      padding: 0.8rem; 
+      border-radius: 6px; 
+      margin-bottom: 8px;
+      transition: background-color 0.2s;
+    }
+    
+    .comment:hover {
+      background: #edf8ee;
+    }
+    
+    .btn-green { 
+      background: var(--secondary-green); 
+      color: #fff; 
+      border: 0; 
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .btn-green:hover { 
+      background: var(--primary-green);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .pinned { 
+      border-left: 4px solid var(--accent-yellow);
+      background: #fffdf0;
+    }
+    
+    .meta { 
+      font-size: .85rem; 
+      color: var(--text-muted); 
+    }
+    
+    .small-muted { 
+      font-size: .85rem; 
+      color: var(--text-light); 
+    }
+    
+    .danger-sm { 
+      font-size: .78rem; 
+      color: var(--danger-red); 
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    
+    .danger-sm:hover {
+      color: #8e0000;
+    }
+    
+    .badge-dept { 
+      background: var(--light-green); 
+      color: var(--primary-green); 
+      border-radius: 6px; 
+      padding: 3px 8px; 
+      font-size: .75rem; 
+      margin-left: 6px;
+      font-weight: 500;
+    }
+    
+    .like-btn {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .like-btn:hover {
+      transform: scale(1.1);
+      color: var(--secondary-green);
+    }
+    
+    .liked {
+      color: var(--secondary-green);
+    }
+    
+    .post-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .search-container {
+      position: relative;
+    }
+    
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-light);
+    }
+    
+    .search-input {
+      padding-left: 40px;
+    }
+    
+    .filter-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--secondary-green);
+      color: white;
+      border-color: var(--secondary-green);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-light);
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #ccc;
+    }
+    
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--secondary-green);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      padding: 2rem;
+    }
+    
+    .post-content {
+      white-space: pre-line;
+      line-height: 1.5;
+    }
+    
+    .comment-input-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .comment-input {
+      flex: 1;
+    }
+    
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--secondary-green);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    
+    .notification.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .notification.error {
+      background: var(--danger-red);
+    }
+    
+    @media (max-width: 768px) {
+      .container-main {
+        padding: 0.5rem;
+        margin: 1rem auto;
+      }
+      
+      .create-post, .post-card {
+        padding: 1rem;
+      }
+      
+      .filter-container {
+        flex-direction: column;
+      }
+      
+      .post-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .post-actions button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg px-4">
+    <a class="navbar-brand text-white" href="#">
+      <i class="bi bi-people-fill"></i> Community Forum
+    </a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <div class="user-avatar" id="userAvatar"></div>
+      <span id="userEmail" class="text-white small-muted"></span>
+      <button id="logoutBtn" class="btn btn-light btn-sm">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container-main">
+    <div id="createPostWrapper" class="create-post" style="display:none;">
+      <h5 class="mb-3">Create a post</h5>
+      <input id="postTitle" class="form-control mb-3" placeholder="Post title" maxlength="100" />
+      <textarea id="postContent" class="form-control mb-3" rows="4" placeholder="What's on your mind?" maxlength="1000"></textarea>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small-muted" id="charCount">0/1000 characters</span>
+      </div>
+
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <select id="postDepartment" class="form-select form-select-sm" style="max-width:220px;">
+          <option value="">Department (optional)</option>
+        </select>
+        <select id="postLevel" class="form-select form-select-sm" style="max-width:160px;">
+          <option value="">Level (optional)</option>
+        </select>
+        <button id="postBtn" class="btn btn-green btn-sm ms-auto">
+          <i class="bi bi-send"></i> Post
+        </button>
+      </div>
+      <div id="createNote" class="small-muted">Posts are visible to users in the same department & level. Use department "General" and level "All" for site-wide posts.</div>
+    </div>
+
+    <div class="search-container mb-3">
+      <i class="bi bi-search search-icon"></i>
+      <input id="searchInput" class="form-control search-input" placeholder="Search posts, titles, content or author..." />
+    </div>
+    
+    <div class="filter-container">
+      <button class="filter-btn active" data-filter="all">All Posts</button>
+      <button class="filter-btn" data-filter="pinned">Pinned</button>
+      <button class="filter-btn" data-filter="my-posts">My Posts</button>
+      <button class="filter-btn" data-filter="my-comments">My Comments</button>
+    </div>
+
+    <div id="postsList">
+      <div class="loading-spinner">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center small-muted mb-4 mt-5">© 2025 Lecturer-Student Platform</footer>
+
+  <div id="notification" class="notification">
+    <i class="bi bi-check-circle"></i>
+    <span id="notificationText">Operation completed successfully</span>
+  </div>
+
+  <!-- Firebase (compat libs that match your other files) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+  // ---------- CONFIG ----------
+  const firebaseConfig = {
+    apiKey: "AIzaSyDT-7UYGrR_1_2HgosPNo8qGJNAGBCyHJg",
+    authDomain: "lecturer-student-project.firebaseapp.com",
+    projectId: "lecturer-student-project",
+    storageBucket: "lecturer-student-project.appspot.com",
+    messagingSenderId: "266517931898",
+    appId: "1:266517931898:web:f48b4af12fdc81001058c3"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // ---------- UI refs ----------
+  const userEmailEl = document.getElementById('userEmail');
+  const userAvatarEl = document.getElementById('userAvatar');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const createPostWrapper = document.getElementById('createPostWrapper');
+  const postTitleInput = document.getElementById('postTitle');
+  const postContentInput = document.getElementById('postContent');
+  const postBtn = document.getElementById('postBtn');
+  const postsList = document.getElementById('postsList');
+  const searchInput = document.getElementById('searchInput');
+  const postDepartment = document.getElementById('postDepartment');
+  const postLevel = document.getElementById('postLevel');
+  const charCountEl = document.getElementById('charCount');
+  const notificationEl = document.getElementById('notification');
+  const notificationTextEl = document.getElementById('notificationText');
+
+  // ---------- state ----------
+  let currentUser = null;
+  let currentUserDoc = null; // user's Firestore doc (contains role, department, level)
+  let postCommentsUnsubs = {}; // map postId -> unsubscribe fn for comments listeners
+  let allPosts = []; // cached posts (raw)
+  let allPostsDocs = {}; // id->doc for convenience
+  let likedPosts = {}; // track which posts user has liked
+  let activeFilter = 'all'; // current filter
+
+  // helper: escape text to prevent HTML injection
+  function esc(s){ return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+
+  // helper: show notification
+  function showNotification(message, isError = false) {
+    notificationTextEl.textContent = message;
+    notificationEl.className = 'notification' + (isError ? ' error' : '');
+    notificationEl.classList.add('show');
+    
+    setTimeout(() => {
+      notificationEl.classList.remove('show');
+    }, 3000);
+  }
+
+  // helper: get user initials for avatar
+  function getUserInitials(email) {
+    if (!email) return '?';
+    return email.substring(0, 2).toUpperCase();
+  }
+
+  // ---------- auth & role check ----------
+  auth.onAuthStateChanged(async (user) => {
+    if(!user) {
+      window.location.href = "login.html";
+      return;
+    }
+    currentUser = user;
+    userEmailEl.textContent = user.email;
+    userAvatarEl.textContent = getUserInitials(user.email);
+    
+    // load user doc (role, department, level, name)
+    try {
+      const udoc = await db.collection('users').doc(user.uid).get();
+      if(!udoc.exists){
+        showNotification('User profile not found. Contact admin.', true);
+        await auth.signOut();
+        window.location.href = "login.html";
+        return;
+      }
+      currentUserDoc = udoc.data();
+
+      // populate department/level selects with some defaults and user's values
+      const depts = [currentUserDoc.department || 'General'];
+      const levels = [currentUserDoc.level || 'All'];
+      // add common fallbacks
+      if(!depts.includes('General')) depts.push('General');
+      if(!levels.includes('All')) levels.push('All');
+      // fill selects
+      postDepartment.innerHTML = '';
+      depts.forEach(d => postDepartment.innerHTML += `<option value="${esc(d)}">${esc(d)}</option>`);
+      postLevel.innerHTML = '';
+      levels.forEach(l => postLevel.innerHTML += `<option value="${esc(l)}">${esc(l)}</option>`);
+
+      // show create UI to everyone logged in (students & lecturers)
+      createPostWrapper.style.display = 'block';
+
+      // start listening posts (we'll filter client-side for dept/level)
+      startPostsListener();
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      showNotification('Error loading user data', true);
+    }
+  });
+
+  // ---------- logout ----------
+  logoutBtn.addEventListener('click', async () => {
+    try { 
+      await auth.signOut(); 
+      window.location.href = 'login.html'; 
+    } catch(e){ 
+      console.error('logout failed', e); 
+      showNotification('Logout failed', true);
+    }
+  });
+
+  // ---------- create post ----------
+  postBtn.addEventListener('click', async () => {
+    const title = postTitleInput.value.trim();
+    const content = postContentInput.value.trim();
+    const dept = postDepartment.value || currentUserDoc.department || 'General';
+    const level = postLevel.value || currentUserDoc.level || 'All';
+    
+    if(!title) {
+      showNotification('Please provide a title', true);
+      postTitleInput.focus();
+      return;
+    }
+    
+    if(!content) {
+      showNotification('Please provide content', true);
+      postContentInput.focus();
+      return;
+    }
+
+    try {
+      postBtn.disabled = true;
+      postBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Posting...';
+      
+      await db.collection('forumPosts').add({
+        title,
+        content,
+        author: currentUser.email,
+        authorId: currentUser.uid,
+        role: currentUserDoc.role || 'student',
+        department: dept,
+        level: level,
+        pinned: false,
+        likes: 0,
+        likedBy: [],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      postTitleInput.value = ''; 
+      postContentInput.value = '';
+      charCountEl.textContent = '0/1000 characters';
+      
+      showNotification('Post created successfully!');
+    } catch(err){ 
+      console.error('add post',err); 
+      showNotification('Failed to create post', true);
+    } finally {
+      postBtn.disabled = false;
+      postBtn.innerHTML = '<i class="bi bi-send"></i> Post';
+    }
+  });
+
+  // Character count for post content
+  postContentInput.addEventListener('input', () => {
+    const count = postContentInput.value.length;
+    charCountEl.textContent = `${count}/1000 characters`;
+    
+    if (count > 950) {
+      charCountEl.style.color = 'var(--danger-red)';
+    } else if (count > 800) {
+      charCountEl.style.color = 'var(--accent-yellow)';
+    } else {
+      charCountEl.style.color = 'var(--text-light)';
+    }
+  });
+
+  // ---------- posts listener ----------
+  let postsUnsub = null;
+  function startPostsListener(){
+    if(postsUnsub) postsUnsub();
+    // listen to all posts, filter client-side to user's department/level and 'General'/'All'
+    postsUnsub = db.collection('forumPosts')
+      .orderBy('createdAt','desc')
+      .onSnapshot(snapshot => {
+        // cleanup existing comment listeners
+        Object.values(postCommentsUnsubs).forEach(fn => typeof fn === 'function' && fn());
+        postCommentsUnsubs = {};
+        allPosts = [];
+        allPostsDocs = {};
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          d.id = doc.id;
+          allPosts.push(d);
+          allPostsDocs[doc.id] = d;
+          
+          // Check if current user has liked this post
+          if (d.likedBy && d.likedBy.includes(currentUser.uid)) {
+            likedPosts[d.id] = true;
+          }
+        });
+        renderFilteredPosts();
+      }, err => {
+        console.error('posts listener error', err);
+        postsList.innerHTML = `<div class="p-3 text-danger">Failed to load posts. Please refresh the page.</div>`;
+      });
+  }
+
+  // helper to determine visibility
+  function postVisibleToCurrentUser(post){
+    // show if department matches or post.department==='General' or post.department falsy
+    const deptMatch = !post.department || post.department === currentUserDoc.department || post.department === 'General';
+    const levelMatch = !post.level || post.level === currentUserDoc.level || post.level === 'All';
+    return deptMatch && levelMatch;
+  }
+
+  // ---------- render posts (and attach comment listeners) ----------
+  function renderFilteredPosts(){
+    const q = searchInput.value.trim().toLowerCase();
+    // first filter by department/level visibility
+    let visible = allPosts.filter(p => postVisibleToCurrentUser(p));
+    
+    // Apply active filter
+    if (activeFilter === 'pinned') {
+      visible = visible.filter(p => p.pinned);
+    } else if (activeFilter === 'my-posts') {
+      visible = visible.filter(p => p.authorId === currentUser.uid);
+    } else if (activeFilter === 'my-comments') {
+      // We'll filter these after loading comments
+      // For now, we'll show all and filter in the UI
+    }
+    
+    // then optional search by title/author/content
+    const searched = q ? visible.filter(p => {
+      return (p.title||'').toLowerCase().includes(q) ||
+             (p.content||'').toLowerCase().includes(q) ||
+             (p.author||'').toLowerCase().includes(q);
+    }) : visible;
+
+    // sort pinned first client-side, then createdAt desc
+    searched.sort((a,b) => {
+      const pa = a.pinned ? 1 : 0;
+      const pb = b.pinned ? 1 : 0;
+      if(pa !== pb) return pb - pa; // pinned true -> earlier
+      const ta = a.createdAt?.seconds || 0;
+      const tb = b.createdAt?.seconds || 0;
+      return tb - ta;
+    });
+
+    postsList.innerHTML = '';
+    
+    if(searched.length === 0){
+      let message = 'No posts found.';
+      if (q) message = 'No posts match your search.';
+      else if (activeFilter === 'pinned') message = 'No pinned posts.';
+      else if (activeFilter === 'my-posts') message = 'You haven\'t created any posts yet.';
+      else if (activeFilter === 'my-comments') message = 'You haven\'t commented on any posts yet.';
+      
+      postsList.innerHTML = `
+        <div class="empty-state">
+          <i class="bi bi-inbox"></i>
+          <h5>${message}</h5>
+          ${!q && activeFilter !== 'all' ? '<p>Try changing your filters or create a new post.</p>' : ''}
+        </div>
+      `;
+      return;
+    }
+
+    // For "my-comments" filter, we need to check comments
+    if (activeFilter === 'my-comments') {
+      // We'll handle this after loading comments
+      // For now, show all and we'll hide posts without user comments in the UI
+    }
+
+    searched.forEach(post => {
+      const card = document.createElement('div');
+      card.className = 'post-card' + (post.pinned ? ' pinned' : '');
+      card.id = `post-${post.id}`;
+      
+      // For "my-comments" filter, initially hide the post
+      if (activeFilter === 'my-comments') {
+        card.style.display = 'none';
+      }
+
+      const createdAt = post.createdAt?.toDate ? post.createdAt.toDate().toLocaleString() : 'Just now';
+      const pinnedLabel = post.pinned ? `<span class="badge bg-warning ms-2">PINNED</span>` : '';
+      const deptBadge = `<span class="badge-dept">${esc(post.department || 'General')}•${esc(post.level || 'All')}</span>`;
+
+      // action buttons: delete (author or lecturer), pin (lecturer)
+      let actionBtns = '';
+      const isAuthor = currentUser && post.authorId === currentUser.uid;
+      const isLecturer = currentUserDoc && currentUserDoc.role === 'lecturer';
+      if(isLecturer) {
+        actionBtns += `<button class="btn btn-sm btn-outline-warning me-1" onclick="togglePinPost('${post.id}', ${post.pinned ? 'true':'false'})">
+          ${post.pinned ? '<i class="bi bi-pin-angle"></i> Unpin' : '<i class="bi bi-pin"></i> Pin'}
+        </button>`;
+      }
+      if(isAuthor || isLecturer) {
+        actionBtns += `<button class="btn btn-sm btn-outline-danger" onclick="deletePost('${post.id}')">
+          <i class="bi bi-trash"></i> Delete
+        </button>`;
+      }
+
+      const likeClass = likedPosts[post.id] ? 'liked' : '';
+      
+      card.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1">
+            <h5 class="mb-1">${esc(post.title)} ${pinnedLabel}</h5>
+            <div class="meta">by <strong>${esc(post.author)}</strong> • ${esc(createdAt)} ${deptBadge}</div>
+            <div class="post-content mt-2">${esc(post.content)}</div>
+          </div>
+          <div class="text-end ms-3">
+            <div class="post-actions">
+              ${actionBtns}
+            </div>
+            <div class="small-muted mt-2">
+              <span>${post.likes || 0}</span> 
+              <i class="bi bi-hand-thumbs-up-fill like-btn ${likeClass}" onclick="likePost('${post.id}')"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 comments-area">
+          <div id="comments-${post.id}" class="mb-2">
+            <div class="small-muted">Loading comments...</div>
+          </div>
+
+          <div class="comment-input-container">
+            <input id="reply-input-${post.id}" class="form-control form-control-sm comment-input" placeholder="Write a reply..." maxlength="500">
+            <button class="btn btn-green btn-sm" onclick="addReply('${post.id}')">
+              <i class="bi bi-send"></i> Send
+            </button>
+          </div>
+        </div>
+      `;
+
+      postsList.appendChild(card);
+
+      // attach comments listener for this post
+      attachCommentsListener(post.id);
+    });
+  }
+
+  // ---------- comments listeners ----------
+  function attachCommentsListener(postId){
+    // unsubscribe previous if any
+    if(postCommentsUnsubs[postId]) {
+      try { postCommentsUnsubs[postId](); } catch(e){}
+    }
+    const commentsDiv = document.getElementById(`comments-${postId}`);
+    if(!commentsDiv) return;
+
+    const unsub = db.collection('forumPosts').doc(postId)
+      .collection('comments')
+      .orderBy('createdAt','asc')
+      .onSnapshot(snapshot => {
+        let html = '';
+        let hasUserComment = false;
+        
+        if(snapshot.empty) {
+          html = '<div class="small-muted">No comments yet.</div>';
+        } else {
+          snapshot.forEach(doc => {
+            const c = doc.data();
+            const created = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString() : 'Just now';
+            const canDelete = currentUser && (c.authorId === currentUser.uid || currentUserDoc.role === 'lecturer');
+            
+            // Check if this is the current user's comment
+            if (c.authorId === currentUser.uid) {
+              hasUserComment = true;
+            }
+            
+            html += `<div class="comment d-flex justify-content-between align-items-center">
+              <div class="flex-grow-1">
+                <div><strong>${esc(c.author)}</strong> • <span class="small-muted">${esc(created)}</span></div>
+                <div class="mt-1">${esc(c.text)}</div>
+              </div>
+              <div>${canDelete ? `<span class="danger-sm" onclick="deleteComment('${postId}','${doc.id}')"><i class="bi bi-trash"></i> Delete</span>` : ''}</div>
+            </div>`;
+          });
+        }
+        
+        commentsDiv.innerHTML = html;
+        
+        // For "my-comments" filter, show/hide the post based on whether user has commented
+        if (activeFilter === 'my-comments') {
+          const postElement = document.getElementById(`post-${postId}`);
+          if (postElement) {
+            postElement.style.display = hasUserComment ? 'block' : 'none';
+          }
+        }
+      }, err => {
+        commentsDiv.innerHTML = `<div class="text-danger small">Can't load comments</div>`;
+        console.error('comments listener', err);
+      });
+
+    postCommentsUnsubs[postId] = unsub;
+  }
+
+  // ---------- actions (public functions used by buttons) ----------
+  window.addReply = async function(postId){
+    const input = document.getElementById(`reply-input-${postId}`);
+    if(!input) return;
+    const text = input.value.trim();
+    if(!text) {
+      showNotification('Please enter a comment', true);
+      input.focus();
+      return;
+    }
+    
+    try {
+      await db.collection('forumPosts').doc(postId).collection('comments').add({
+        text,
+        author: currentUser.email,
+        authorId: currentUser.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      input.value = '';
+      showNotification('Comment added');
+    } catch(err){ 
+      console.error('add reply', err); 
+      showNotification('Failed to add comment', true);
+    }
+  };
+
+  window.deleteComment = async function(postId, commentId){
+    if(!confirm('Are you sure you want to delete this comment?')) return;
+    try {
+      // optional: double-check permission on client
+      const cDoc = await db.collection('forumPosts').doc(postId).collection('comments').doc(commentId).get();
+      const c = cDoc.data();
+      if(c.authorId !== currentUser.uid && currentUserDoc.role !== 'lecturer') {
+        showNotification('You are not allowed to delete this comment', true);
+        return;
+      }
+      await db.collection('forumPosts').doc(postId).collection('comments').doc(commentId).delete();
+      showNotification('Comment deleted');
+    } catch(err){ 
+      console.error('delete comment', err); 
+      showNotification('Failed to delete comment', true);
+    }
+  };
+
+  window.deletePost = async function(postId){
+    if(!confirm('Are you sure you want to delete this post? This action cannot be undone.')) return;
+    try {
+      // check permission quickly
+      const pDoc = await db.collection('forumPosts').doc(postId).get();
+      const p = pDoc.data();
+      if(p.authorId !== currentUser.uid && currentUserDoc.role !== 'lecturer') {
+        showNotification('You cannot delete this post', true);
+        return;
+      }
+      // delete comments subcollection first (safer, though firestore may allow cascade in your setup)
+      const commentsSnap = await db.collection('forumPosts').doc(postId).collection('comments').get();
+      const batch = db.batch();
+      commentsSnap.forEach(d => batch.delete(d.ref));
+      batch.delete(db.collection('forumPosts').doc(postId));
+      await batch.commit();
+      showNotification('Post deleted');
+    } catch(err){ 
+      console.error('delete post',err); 
+      showNotification('Failed to delete post', true);
+    }
+  };
+
+  window.togglePinPost = async function(postId, currentlyPinned){
+    if(currentUserDoc.role !== 'lecturer') {
+      showNotification('Only lecturers can pin posts', true);
+      return;
+    }
+    try {
+      await db.collection('forumPosts').doc(postId).update({ pinned: !currentlyPinned });
+      showNotification(`Post ${!currentlyPinned ? 'pinned' : 'unpinned'}`);
+    } catch(err){ 
+      console.error('pin',err); 
+      showNotification('Failed to update pin status', true);
+    }
+  };
+
+  window.likePost = async function(postId){
+    const postRef = db.collection('forumPosts').doc(postId);
+    const userLiked = likedPosts[postId];
+    
+    try {
+      await db.runTransaction(async (tx) => {
+        const d = await tx.get(postRef);
+        if(!d.exists) return;
+        
+        const postData = d.data();
+        let newLikes = postData.likes || 0;
+        let likedBy = postData.likedBy || [];
+        
+        if (userLiked) {
+          // Unlike the post
+          newLikes = Math.max(0, newLikes - 1);
+          likedBy = likedBy.filter(uid => uid !== currentUser.uid);
+          delete likedPosts[postId];
+        } else {
+          // Like the post
+          newLikes += 1;
+          likedBy.push(currentUser.uid);
+          likedPosts[postId] = true;
+        }
+        
+        tx.update(postRef, { 
+          likes: newLikes,
+          likedBy: likedBy
+        });
+      });
+      
+      // Update UI immediately for better UX
+      const likeBtn = document.querySelector(`#post-${postId} .like-btn`);
+      const likeCount = document.querySelector(`#post-${postId} .small-muted span`);
+      
+      if (likeBtn && likeCount) {
+        if (userLiked) {
+          likeBtn.classList.remove('liked');
+          likeBtn.classList.remove('bi-hand-thumbs-up-fill');
+          likeBtn.classList.add('bi-hand-thumbs-up');
+        } else {
+          likeBtn.classList.add('liked');
+          likeBtn.classList.remove('bi-hand-thumbs-up');
+          likeBtn.classList.add('bi-hand-thumbs-up-fill');
+        }
+        
+        const currentCount = parseInt(likeCount.textContent);
+        likeCount.textContent = userLiked ? currentCount - 1 : currentCount + 1;
+      }
+    } catch(err){ 
+      console.error('like',err); 
+      showNotification('Failed to like post', true);
+    }
+  };
+
+  // ---------- searching ----------
+  searchInput.addEventListener('input', () => renderFilteredPosts());
+
+  // ---------- filter buttons ----------
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      // Update active button
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Update filter and re-render
+      activeFilter = this.getAttribute('data-filter');
+      renderFilteredPosts();
+    });
+  });
+
+  // ---------- cleanup when leaving ----------
+  window.addEventListener('beforeunload', () => {
+    if(postsUnsub) postsUnsub();
+    Object.values(postCommentsUnsubs).forEach(fn => typeof fn === 'function' && fn());
+  });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

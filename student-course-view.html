@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Course Portal | Learning Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3a0ca3;
+      --success-color: #4cc9a7;
+      --warning-color: #f9c74f;
+      --danger-color: #f94144;
+      --dark-color: #2b2d42;
+      --light-color: #f8f9fa;
+      --gradient-primary: linear-gradient(135deg, #4361ee, #3a0ca3);
+      --gradient-success: linear-gradient(135deg, #4cc9a7, #38b2ac);
+      --gradient-warning: linear-gradient(135deg, #f9c74f, #f8961e);
+      --shadow-soft: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-medium: 0 8px 30px rgba(0,0,0,0.12);
+      --shadow-large: 0 15px 40px rgba(0,0,0,0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #f8f9fa 100%);
+      min-height: 100vh;
+      color: var(--dark-color);
+      line-height: 1.6;
+    }
+
+    /* Header & Navigation */
+    .course-header {
+      background: var(--gradient-primary);
+      color: white;
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-medium);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .course-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+      background-size: 20px 20px;
+      animation: float 20s linear infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(-20px, -20px) rotate(360deg); }
+    }
+
+    .course-title {
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .course-subtitle {
+      font-weight: 400;
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    /* Stats Overview */
+    .stats-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-large);
+    }
+
+    .stat-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: var(--dark-color);
+      font-weight: 500;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* Content Sections */
+    .section-header {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid rgba(67, 97, 238, 0.1);
+    }
+
+    .section-title {
+      font-weight: 700;
+      color: var(--dark-color);
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-title i {
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Cards */
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .content-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: var(--shadow-soft);
+      transition: all 0.4s ease;
+      border: 1px solid rgba(255,255,255,0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .content-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient-primary);
+    }
+
+    .content-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: var(--shadow-large);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .material-icon {
+      background: linear-gradient(135deg, #4cc9a7, #38b2ac);
+      color: white;
+    }
+
+    .assignment-icon {
+      background: linear-gradient(135deg, #f9c74f, #f8961e);
+      color: white;
+    }
+
+    .card-title {
+      font-weight: 600;
+      color: var(--dark-color);
+      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+      line-height: 1.4;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+
+    .meta-item i {
+      opacity: 0.7;
+    }
+
+    .card-description {
+      color: #6c757d;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    /* Buttons */
+    .btn-group-custom {
+      display: flex;
+      gap: 1rem;
+      margin-top: auto;
+    }
+
+    .btn-custom {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .btn-primary-custom {
+      background: var(--gradient-primary);
+      color: white;
+    }
+
+    .btn-primary-custom:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(67, 97, 238, 0.3);
+      color: white;
+    }
+
+    .btn-outline-custom {
+      background: transparent;
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+    }
+
+    .btn-outline-custom:hover {
+      background: var(--primary-color);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    /* Loading States */
+    .loading-spinner {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .skeleton-loader {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 0.5rem;
+    }
+
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Empty States */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #6c757d;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h4 {
+      margin-bottom: 1rem;
+      color: #495057;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .course-title {
+        font-size: 2rem;
+      }
+      
+      .content-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      
+      .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+      
+      .stat-card {
+        padding: 1.5rem;
+      }
+      
+      .btn-group-custom {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .card-header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .card-meta {
+        justify-content: center;
+      }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--secondary-color);
+    }
+  </style>
+</head>
+<body>
+  <!-- Course Header -->
+  <header class="course-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1 id="courseTitle" class="course-title">
+            <i class="bi bi-book-half"></i>
+            <span>Loading Course...</span>
+          </h1>
+          <p class="course-subtitle" id="courseDescription">Fetching course information...</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <div class="btn-group">
+            <button class="btn btn-light btn-sm" onclick="window.history.back()">
+              <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <button class="btn btn-outline-light btn-sm" onclick="refreshData()">
+              <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Stats Overview -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <i class="bi bi-file-earmark-text stat-icon"></i>
+        <div class="stat-number" id="materialsCount">0</div>
+        <div class="stat-label">Learning Materials</div>
+      </div>
+      <div class="stat-card">
+        <i class="bi bi-clipboard-check stat-icon"></i>
+        <div class="stat-number" id="assignmentsCount">0</div>
+        <div class="stat-label">Active Assignments</div>
+      </div>
+      <div class="stat-card">
+        <i class="bi bi-calendar-check stat-icon"></i>
+        <div class="stat-number" id="upcomingCount">0</div>
+        <div class="stat-label">Upcoming Deadlines</div>
+      </div>
+      <div class="stat-card">
+        <i class="bi bi-download stat-icon"></i>
+        <div class="stat-number" id="downloadsCount">0</div>
+        <div class="stat-label">Total Downloads</div>
+      </div>
+    </div>
+
+    <!-- Materials Section -->
+    <section class="mb-5">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="bi bi-folder-fill"></i>
+          Course Materials
+        </h2>
+        <span class="badge bg-primary rounded-pill" id="materialsBadge">0</span>
+      </div>
+      
+      <div class="content-grid" id="materialsList">
+        <!-- Skeleton Loaders -->
+        <div class="content-card">
+          <div class="card-header">
+            <div class="card-icon material-icon skeleton-loader" style="width: 60px; height: 60px;"></div>
+            <div style="flex: 1;">
+              <div class="card-title skeleton-loader" style="height: 24px; margin-bottom: 8px;"></div>
+              <div class="skeleton-loader" style="height: 16px; width: 80%;"></div>
+            </div>
+          </div>
+          <div class="card-meta">
+            <div class="skeleton-loader" style="height: 16px; width: 100px;"></div>
+            <div class="skeleton-loader" style="height: 16px; width: 120px;"></div>
+          </div>
+          <div class="skeleton-loader" style="height: 60px; margin-bottom: 20px;"></div>
+          <div class="skeleton-loader" style="height: 45px; border-radius: 12px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Assignments Section -->
+    <section class="mb-5">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="bi bi-clipboard-data-fill"></i>
+          Course Assignments
+        </h2>
+        <span class="badge bg-warning rounded-pill" id="assignmentsBadge">0</span>
+      </div>
+      
+      <div class="content-grid" id="assignmentsList">
+        <!-- Skeleton Loaders -->
+        <div class="content-card">
+          <div class="card-header">
+            <div class="card-icon assignment-icon skeleton-loader" style="width: 60px; height: 60px;"></div>
+            <div style="flex: 1;">
+              <div class="card-title skeleton-loader" style="height: 24px; margin-bottom: 8px;"></div>
+              <div class="skeleton-loader" style="height: 16px; width: 80%;"></div>
+            </div>
+          </div>
+          <div class="card-meta">
+            <div class="skeleton-loader" style="height: 16px; width: 100px;"></div>
+            <div class="skeleton-loader" style="height: 16px; width: 120px;"></div>
+          </div>
+          <div class="skeleton-loader" style="height: 60px; margin-bottom: 20px;"></div>
+          <div class="skeleton-loader" style="height: 45px; border-radius: 12px;"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <i class="bi bi-info-circle-fill text-primary me-2"></i>
+        <strong class="me-auto">Course Portal</strong>
+        <small>Just now</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toastMessage">
+        Welcome to your course!
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDT-7UYGrR_1_2HgosPNo8qGJNAGBCyHJg",
+      authDomain: "lecturer-student-project.firebaseapp.com",
+      projectId: "lecturer-student-project",
+      storageBucket: "lecturer-student-project.appspot.com",
+      messagingSenderId: "266517931898",
+      appId: "1:266517931898:web:f48b4af12fdc81001058c3"
+    };
+
+    // Initialize Firebase
+    let app;
+    try {
+      app = firebase.initializeApp(firebaseConfig);
+      console.log("Firebase initialized successfully");
+    } catch (error) {
+      console.log('Firebase already initialized');
+      app = firebase.app();
+    }
+    
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM Elements
+    const materialsList = document.getElementById("materialsList");
+    const assignmentsList = document.getElementById("assignmentsList");
+    const courseTitleEl = document.getElementById("courseTitle");
+    const courseDescriptionEl = document.getElementById("courseDescription");
+
+    // Stats elements
+    const materialsCountEl = document.getElementById("materialsCount");
+    const assignmentsCountEl = document.getElementById("assignmentsCount");
+    const upcomingCountEl = document.getElementById("upcomingCount");
+    const downloadsCountEl = document.getElementById("downloadsCount");
+    const materialsBadge = document.getElementById("materialsBadge");
+    const assignmentsBadge = document.getElementById("assignmentsBadge");
+
+    // State
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get("courseId");
+    let materials = [];
+    let assignments = [];
+
+    // Initialize
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      
+      if (!courseId) {
+        showError("Invalid course link");
+        return;
+      }
+
+      await loadCourseData(user);
+    });
+
+    async function loadCourseData(user) {
+      try {
+        // Load course details
+        const courseSnap = await db.collection("courses").doc(courseId).get();
+        if (!courseSnap.exists) {
+          showError("Course not found");
+          return;
+        }
+
+        const course = courseSnap.data();
+        updateCourseHeader(course);
+
+        // Load materials and assignments
+        await Promise.all([
+          loadMaterials(),
+          loadAssignments()
+        ]);
+
+        showToast(`Welcome to ${course.name || 'your course'}!`, 'success');
+
+      } catch (error) {
+        console.error("Error loading course data:", error);
+        showToast("Error loading course data", "error");
+      }
+    }
+
+    function updateCourseHeader(course) {
+      courseTitleEl.innerHTML = `<i class="bi bi-book-half"></i> ${course.courseCode || ""} - ${course.name || "Unnamed Course"}`;
+      courseDescriptionEl.textContent = course.description || "Explore course materials and assignments below";
+    }
+
+    async function loadMaterials() {
+      materialsList.innerHTML = '<div class="col-12 text-center py-5"><div class="loading-spinner"></div><p class="mt-3 text-muted">Loading materials...</p></div>';
+
+      db.collection("materials")
+        .where("courseId", "==", courseId)
+        .onSnapshot((snapshot) => {
+          materials = [];
+          snapshot.forEach(doc => {
+            materials.push({ id: doc.id, ...doc.data() });
+          });
+
+          renderMaterials();
+          updateStats();
+        }, (error) => {
+          console.error("Error loading materials:", error);
+          materialsList.innerHTML = `
+            <div class="col-12">
+              <div class="empty-state">
+                <i class="bi bi-exclamation-triangle text-danger"></i>
+                <h4>Error Loading Materials</h4>
+                <p>Please try refreshing the page</p>
+                <button class="btn btn-primary-custom mt-3" onclick="loadMaterials()">
+                  <i class="bi bi-arrow-clockwise"></i> Try Again
+                </button>
+              </div>
+            </div>
+          `;
+        });
+    }
+
+    async function loadAssignments() {
+      assignmentsList.innerHTML = '<div class="col-12 text-center py-5"><div class="loading-spinner"></div><p class="mt-3 text-muted">Loading assignments...</p></div>';
+
+      db.collection("assignments")
+        .where("courseId", "==", courseId)
+        .onSnapshot((snapshot) => {
+          assignments = [];
+          snapshot.forEach(doc => {
+            assignments.push({ id: doc.id, ...doc.data() });
+          });
+
+          renderAssignments();
+          updateStats();
+        }, (error) => {
+          console.error("Error loading assignments:", error);
+          assignmentsList.innerHTML = `
+            <div class="col-12">
+              <div class="empty-state">
+                <i class="bi bi-exclamation-triangle text-danger"></i>
+                <h4>Error Loading Assignments</h4>
+                <p>Please try refreshing the page</p>
+                <button class="btn btn-primary-custom mt-3" onclick="loadAssignments()">
+                  <i class="bi bi-arrow-clockwise"></i> Try Again
+                </button>
+              </div>
+            </div>
+          `;
+        });
+    }
+
+    function renderMaterials() {
+      if (materials.length === 0) {
+        materialsList.innerHTML = `
+          <div class="col-12">
+            <div class="empty-state">
+              <i class="bi bi-folder-x"></i>
+              <h4>No Materials Available</h4>
+              <p>Course materials will appear here once uploaded by your instructor</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      materialsList.innerHTML = materials.map(material => {
+        const createdAt = material.createdAt?.toDate?.() 
+          ? material.createdAt.toDate().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })
+          : "Unknown date";
+
+        const fileType = getFileType(material.fileURL);
+        const fileSize = material.fileSize || "Unknown size";
+
+        return `
+          <div class="content-card">
+            <div class="card-header">
+              <div class="card-icon material-icon">
+                <i class="bi ${getFileIcon(material.fileURL)}"></i>
+              </div>
+              <div>
+                <h3 class="card-title">${material.materialTitle || "Untitled Material"}</h3>
+                <p class="text-muted small">${fileType} • ${fileSize}</p>
+              </div>
+            </div>
+            
+            <div class="card-meta">
+              <div class="meta-item">
+                <i class="bi bi-calendar"></i>
+                <span>Uploaded: ${createdAt}</span>
+              </div>
+              <div class="meta-item">
+                <i class="bi bi-download"></i>
+                <span>${material.downloadCount || 0} downloads</span>
+              </div>
+            </div>
+
+            <p class="card-description">
+              ${material.description || "No description provided for this material."}
+            </p>
+
+            <div class="btn-group-custom">
+              <a href="${material.fileURL}" target="_blank" class="btn-custom btn-primary-custom" onclick="trackDownload('${material.id}')">
+                <i class="bi bi-download"></i> Download
+              </a>
+              <button class="btn-custom btn-outline-custom" onclick="previewMaterial('${material.id}')">
+                <i class="bi bi-eye"></i> Preview
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAssignments() {
+      if (assignments.length === 0) {
+        assignmentsList.innerHTML = `
+          <div class="col-12">
+            <div class="empty-state">
+              <i class="bi bi-clipboard-x"></i>
+              <h4>No Assignments Yet</h4>
+              <p>Assignments will appear here once created by your instructor</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      assignmentsList.innerHTML = assignments.map(assignment => {
+        const deadline = assignment.deadline?.toDate?.()
+          ? assignment.deadline.toDate().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : "No deadline";
+
+        const isUpcoming = assignment.deadline?.toDate?.() > new Date();
+        const status = isUpcoming ? "Upcoming" : "Past Due";
+
+        return `
+          <div class="content-card">
+            <div class="card-header">
+              <div class="card-icon assignment-icon">
+                <i class="bi bi-clipboard-check"></i>
+              </div>
+              <div>
+                <h3 class="card-title">${assignment.assignmentTitle || "Untitled Assignment"}</h3>
+                <span class="badge ${isUpcoming ? 'bg-warning' : 'bg-danger'}">${status}</span>
+              </div>
+            </div>
+            
+            <div class="card-meta">
+              <div class="meta-item">
+                <i class="bi bi-clock"></i>
+                <span>Due: ${deadline}</span>
+              </div>
+              <div class="meta-item">
+                <i class="bi bi-person"></i>
+                <span>${assignment.maxPoints || 100} points</span>
+              </div>
+            </div>
+
+            <p class="card-description">
+              ${assignment.instructions || "No additional instructions provided."}
+            </p>
+
+            <div class="btn-group-custom">
+              <a href="assignment-details.html?id=${assignment.id}" class="btn-custom btn-primary-custom">
+                <i class="bi bi-arrow-right"></i> View Details
+              </a>
+              <button class="btn-custom btn-outline-custom" onclick="startAssignment('${assignment.id}')">
+                <i class="bi bi-pencil"></i> Start Work
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateStats() {
+      // Update counts
+      materialsCountEl.textContent = materials.length;
+      assignmentsCountEl.textContent = assignments.length;
+      materialsBadge.textContent = materials.length;
+      assignmentsBadge.textContent = assignments.length;
+
+      // Calculate upcoming deadlines
+      const upcoming = assignments.filter(assignment => {
+        const deadline = assignment.deadline?.toDate?.();
+        return deadline && deadline > new Date();
+      });
+      upcomingCountEl.textContent = upcoming.length;
+
+      // Calculate total downloads
+      const totalDownloads = materials.reduce((sum, material) => sum + (material.downloadCount || 0), 0);
+      downloadsCountEl.textContent = totalDownloads;
+    }
+
+    function getFileType(url) {
+      if (!url) return "Unknown";
+      const ext = url.split('.').pop().toLowerCase();
+      const types = {
+        pdf: "PDF Document",
+        doc: "Word Document",
+        docx: "Word Document",
+        ppt: "PowerPoint",
+        pptx: "PowerPoint",
+        xls: "Excel Spreadsheet",
+        xlsx: "Excel Spreadsheet",
+        zip: "ZIP Archive",
+        rar: "RAR Archive",
+        txt: "Text File",
+        jpg: "JPEG Image",
+        jpeg: "JPEG Image",
+        png: "PNG Image",
+        mp4: "MP4 Video"
+      };
+      return types[ext] || ext.toUpperCase() + " File";
+    }
+
+    function getFileIcon(url) {
+      if (!url) return "bi-file-earmark";
+      const ext = url.split('.').pop().toLowerCase();
+      const icons = {
+        pdf: "bi-file-earmark-pdf",
+        doc: "bi-file-earmark-word",
+        docx: "bi-file-earmark-word",
+        ppt: "bi-file-earmark-ppt",
+        pptx: "bi-file-earmark-ppt",
+        xls: "bi-file-earmark-excel",
+        xlsx: "bi-file-earmark-excel",
+        zip: "bi-file-earmark-zip",
+        rar: "bi-file-earmark-zip",
+        txt: "bi-file-earmark-text",
+        jpg: "bi-file-earmark-image",
+        jpeg: "bi-file-earmark-image",
+        png: "bi-file-earmark-image",
+        mp4: "bi-file-earmark-play"
+      };
+      return icons[ext] || "bi-file-earmark";
+    }
+
+    function trackDownload(materialId) {
+      // Increment download count in Firebase
+      const materialRef = db.collection("materials").doc(materialId);
+      materialRef.update({
+        downloadCount: firebase.firestore.FieldValue.increment(1)
+      }).catch(error => {
+        console.error("Error tracking download:", error);
+      });
+    }
+
+    function previewMaterial(materialId) {
+      const material = materials.find(m => m.id === materialId);
+      if (material && material.fileURL) {
+        window.open(material.fileURL, '_blank');
+      } else {
+        showToast("Preview not available for this material", "warning");
+      }
+    }
+
+    function startAssignment(assignmentId) {
+      window.location.href = `assignment-details.html?id=${assignmentId}`;
+    }
+
+    function refreshData() {
+      showToast("Refreshing course data...", "info");
+      const user = auth.currentUser;
+      if (user) {
+        loadCourseData(user);
+      }
+    }
+
+    function showToast(message, type = "info") {
+      const toastEl = document.getElementById('liveToast');
+      const toastMessage = document.getElementById('toastMessage');
+      
+      // Update toast style based on type
+      const toast = new bootstrap.Toast(toastEl);
+      const headerIcon = toastEl.querySelector('.bi');
+      
+      headerIcon.className = `bi ${
+        type === 'success' ? 'bi-check-circle-fill text-success' :
+        type === 'error' ? 'bi-exclamation-circle-fill text-danger' :
+        type === 'warning' ? 'bi-exclamation-triangle-fill text-warning' :
+        'bi-info-circle-fill text-primary'
+      } me-2`;
+      
+      toastMessage.textContent = message;
+      toast.show();
+    }
+
+    function showError(message) {
+      courseTitleEl.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Error`;
+      courseDescriptionEl.textContent = message;
+      materialsList.innerHTML = '';
+      assignmentsList.innerHTML = '';
+    }
+
+    // Utility function to format file size
+    function formatFileSize(bytes) {
+      if (!bytes) return "Unknown size";
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    }
+  </script>
+</body>
+</html>

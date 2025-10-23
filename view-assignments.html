@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Assignments - Lecturer Dashboard</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #eef2f7, #dce9ff);
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+      background: rgba(255,255,255,0.4);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .header img {
+      width: 80px;
+      border-radius: 50%;
+      margin-bottom: .5rem;
+      border: 3px solid #1565c0;
+    }
+    .header h4 {
+      color: #0d47a1;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .card-container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      background: rgba(255,255,255,0.95);
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.1);
+    }
+
+    .assignment-card {
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(145deg, #ffffff, #f1f5ff);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+      transition: all 0.3s ease;
+      border-left: 4px solid #1565c0;
+    }
+    .assignment-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    }
+
+    .assignment-card.expired {
+      border-left-color: #dc3545;
+      background: linear-gradient(145deg, #fff5f5, #ffeaea);
+    }
+
+    .assignment-card.active {
+      border-left-color: #28a745;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .badge {
+      font-size: 0.75em;
+    }
+
+    .submission-count {
+      background: #6f42c1;
+    }
+
+    footer {
+      margin-top: auto;
+      background: #1565c0;
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #6c757d;
+    }
+
+    .stats-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <img src="school.jpg" alt="School Logo" />
+    <h4>Federal College of Fisheries & Marine Technology</h4>
+  </div>
+
+  <div class="card-container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0"><i class="bi bi-journal-text"></i> My Assignments</h3>
+      <a href="assignment_page.html" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> New Assignment
+      </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row" id="statsContainer">
+      <div class="col-md-3">
+        <div class="stats-card text-center">
+          <h4 id="totalAssignments">0</h4>
+          <p>Total Assignments</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card text-center">
+          <h4 id="activeAssignments">0</h4>
+          <p>Active</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card text-center">
+          <h4 id="expiredAssignments">0</h4>
+          <p>Expired</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stats-card text-center">
+          <h4 id="totalSubmissions">0</h4>
+          <p>Total Submissions</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" id="searchInput" class="form-control flex-grow-1" placeholder="🔍 Search assignments...">
+      <select id="filterCourse" class="form-select">
+        <option value="">All Courses</option>
+      </select>
+      <select id="filterStatus" class="form-select">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="expired">Expired</option>
+      </select>
+    </div>
+
+    <div id="assignmentsList" class="mt-3">
+      <div class="empty-state">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2">Loading your assignments...</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>© 2025 Federal College of Fisheries & Marine Technology</footer>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <script>
+  (async function(){
+    const firebaseConfig = {
+      apiKey: "AIzaSyDT-7UYGrR_1_2HgosPNo8qGJNAGBCyHJg",
+      authDomain: "lecturer-student-project.firebaseapp.com",
+      projectId: "lecturer-student-project",
+      storageBucket: "lecturer-student-project.appspot.com",
+      messagingSenderId: "266517931898",
+      appId: "1:266517931898:web:f48b4af12fdc81001058c3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const listDiv = document.getElementById('assignmentsList');
+    const searchInput = document.getElementById("searchInput");
+    const filterCourse = document.getElementById("filterCourse");
+    const filterStatus = document.getElementById("filterStatus");
+    const statsContainer = document.getElementById('statsContainer');
+
+    let allAssignments = [];
+    let submissionCounts = {};
+
+    // Utility Functions
+    function setLoadingState(loading) {
+      if (loading) {
+        listDiv.innerHTML = `<div class="text-center p-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2">Loading your assignments...</p>
+        </div>`;
+      }
+    }
+
+    function getAssignmentStatus(deadline) {
+      if (!deadline) return "No deadline";
+      const now = new Date();
+      const deadlineDate = deadline.toDate ? deadline.toDate() : new Date(deadline);
+      return deadlineDate < now ? "expired" : "active";
+    }
+
+    function formatDate(date) {
+      if (!date) return "No deadline";
+      const dateObj = date.toDate ? date.toDate() : new Date(date);
+      return dateObj.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function updateStatistics(assignments) {
+      const total = assignments.length;
+      const active = assignments.filter(a => getAssignmentStatus(a.deadline) === 'active').length;
+      const expired = assignments.filter(a => getAssignmentStatus(a.deadline) === 'expired').length;
+      const totalSubmissions = Object.values(submissionCounts).reduce((sum, count) => sum + count, 0);
+
+      document.getElementById('totalAssignments').textContent = total;
+      document.getElementById('activeAssignments').textContent = active;
+      document.getElementById('expiredAssignments').textContent = expired;
+      document.getElementById('totalSubmissions').textContent = totalSubmissions;
+    }
+
+    async function loadSubmissionCounts(assignments) {
+      submissionCounts = {};
+      for (const assignment of assignments) {
+        try {
+          const submissionsSnap = await db.collection("submissions")
+            .where("assignmentId", "==", assignment.id)
+            .get();
+          submissionCounts[assignment.id] = submissionsSnap.size;
+        } catch (err) {
+          console.error("Error loading submissions for assignment:", assignment.id, err);
+          submissionCounts[assignment.id] = 0;
+        }
+      }
+    }
+
+    function renderAssignments(){
+      const searchText = searchInput.value.toLowerCase();
+      const courseFilter = filterCourse.value;
+      const statusFilter = filterStatus.value;
+
+      let filtered = allAssignments.filter(a =>
+        (!courseFilter || a.courseCode === courseFilter) &&
+        (!statusFilter || getAssignmentStatus(a.deadline) === statusFilter) &&
+        (!searchText || 
+          a.assignmentTitle.toLowerCase().includes(searchText) ||
+          a.courseCode.toLowerCase().includes(searchText) ||
+          a.description.toLowerCase().includes(searchText))
+      );
+
+      if(filtered.length === 0){
+        listDiv.innerHTML = `<div class="empty-state">
+          <i class="bi bi-clipboard-x fs-1"></i>
+          <h5 class="mt-3">No assignments found</h5>
+          <p class="mb-3">${allAssignments.length === 0 ? 'Create your first assignment to get started!' : 'Try changing your search or filter'}</p>
+          ${allAssignments.length === 0 ? '<a href="assignment_page.html" class="btn btn-primary">Create Assignment</a>' : ''}
+        </div>`;
+        return;
+      }
+
+      listDiv.innerHTML = '';
+      filtered.forEach(a => {
+        const status = getAssignmentStatus(a.deadline);
+        const statusClass = status === "active" ? "success" : "danger";
+        const cardClass = status === "active" ? "active" : "expired";
+        const deadline = formatDate(a.deadline);
+        const submissionsCount = submissionCounts[a.id] || 0;
+
+        listDiv.innerHTML += `
+          <div class="assignment-card ${cardClass}">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <h5 class="mb-0">${a.assignmentTitle}</h5>
+                  <span class="badge bg-${statusClass}">${status.toUpperCase()}</span>
+                  ${submissionsCount > 0 ? `<span class="badge submission-count">${submissionsCount} Submission${submissionsCount !== 1 ? 's' : ''}</span>` : ''}
+                </div>
+                <p class="mb-1"><strong>Course:</strong> ${a.courseCode} - ${a.courseTitle || ''}</p>
+                <p class="mb-1"><strong>Description:</strong> ${a.description.length > 150 ? a.description.substring(0, 150) + '...' : a.description}</p>
+                <p class="mb-2"><strong>Deadline:</strong> ${deadline}</p>
+                ${a.fileURL ? `<p class="mb-2"><strong>Attachment:</strong> <a href="${a.fileURL}" target="_blank" class="text-decoration-none">📎 View File</a></p>` : ''}
+              </div>
+              <div class="action-buttons">
+                ${submissionsCount > 0 ? `
+                  <button class="btn btn-success btn-sm view-submissions" data-id="${a.id}" data-title="${a.assignmentTitle}">
+                    <i class="bi bi-eye"></i> View Submissions (${submissionsCount})
+                  </button>
+                ` : ''}
+                <button class="btn btn-primary btn-sm edit-assignment" data-id="${a.id}">
+                  <i class="bi bi-pencil"></i> Edit
+                </button>
+                <button class="btn btn-danger btn-sm delete-assignment" data-id="${a.id}">
+                  <i class="bi bi-trash"></i> Delete
+                </button>
+              </div>
+            </div>
+          </div>`;
+      });
+
+      // Add event listeners to action buttons
+      document.querySelectorAll('.view-submissions').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const assignmentId = e.target.closest('.view-submissions').dataset.id;
+          const assignmentTitle = e.target.closest('.view-submissions').dataset.title;
+          viewSubmissions(assignmentId, assignmentTitle);
+        });
+      });
+
+      document.querySelectorAll('.delete-assignment').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const assignmentId = e.target.closest('.delete-assignment').dataset.id;
+          deleteAssignment(assignmentId);
+        });
+      });
+
+      document.querySelectorAll('.edit-assignment').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const assignmentId = e.target.closest('.edit-assignment').dataset.id;
+          editAssignment(assignmentId);
+        });
+      });
+    }
+
+    function populateCourseFilter(assignments){
+      const uniqueCourses = [...new Set(assignments.map(a => a.courseCode))];
+      filterCourse.innerHTML = `<option value="">All Courses</option>`;
+      uniqueCourses.forEach(course => {
+        filterCourse.innerHTML += `<option value="${course}">${course}</option>`;
+      });
+    }
+
+    async function viewSubmissions(assignmentId, assignmentTitle) {
+      // Redirect to submissions page with assignment ID
+      window.location.href = `view-submissions.html?assignmentId=${assignmentId}&title=${encodeURIComponent(assignmentTitle)}`;
+    }
+
+    async function deleteAssignment(assignmentId) {
+      const assignment = allAssignments.find(a => a.id === assignmentId);
+      if (!assignment) return;
+
+      if (confirm(`Are you sure you want to delete "${assignment.assignmentTitle}"? This will also delete all submissions for this assignment.`)) {
+        try {
+          setLoadingState(true);
+          
+          // Delete all submissions for this assignment first
+          const submissionsSnap = await db.collection("submissions")
+            .where("assignmentId", "==", assignmentId)
+            .get();
+          
+          const deletePromises = submissionsSnap.docs.map(doc => doc.ref.delete());
+          await Promise.all(deletePromises);
+          
+          // Delete the assignment
+          await db.collection("assignments").doc(assignmentId).delete();
+          
+          // Reload assignments
+          const user = auth.currentUser;
+          await loadAssignments(user.uid);
+          
+        } catch (err) {
+          console.error("Error deleting assignment:", err);
+          alert("Error deleting assignment. Please try again.");
+        }
+      }
+    }
+
+    function editAssignment(assignmentId) {
+      // Redirect to edit assignment page
+      window.location.href = `assignment_page.html?edit=${assignmentId}`;
+    }
+
+    async function loadAssignments(uid){
+      setLoadingState(true);
+      try {
+        const snap = await db.collection("assignments")
+          .where("lecturerId", "==", uid)
+          .orderBy("createdAt", "desc")
+          .get();
+
+        allAssignments = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Load submission counts for each assignment
+        await loadSubmissionCounts(allAssignments);
+        
+        populateCourseFilter(allAssignments);
+        updateStatistics(allAssignments);
+        renderAssignments();
+      } catch(err){
+        console.error("Error fetching assignments:", err);
+        listDiv.innerHTML = `<div class="alert alert-danger">Error loading assignments. Please refresh the page.</div>`;
+      } finally {
+        setLoadingState(false);
+      }
+    }
+
+    // Event Listeners
+    searchInput.addEventListener("input", renderAssignments);
+    filterCourse.addEventListener("change", renderAssignments);
+    filterStatus.addEventListener("change", renderAssignments);
+
+    // Authentication and Role Verification
+    auth.onAuthStateChanged(async user => {
+      if(!user){
+        alert("Unauthorized access! Please log in first.");
+        window.location.href = "login.html";
+        return;
+      }
+      
+      // Verify user is a lecturer
+      try {
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (!userDoc.exists || userDoc.data().role !== 'lecturer') {
+          alert("Access denied. Lecturers only.");
+          window.location.href = "login.html";
+          return;
+        }
+      } catch(err) {
+        console.error("Role verification error:", err);
+        alert("Error verifying your account. Please log in again.");
+        window.location.href = "login.html";
+        return;
+      }
+      
+      console.log("Logged in as lecturer:", user.email);
+      await loadAssignments(user.uid);
+    });
+  })();
+  </script>
+</body>
+</html>

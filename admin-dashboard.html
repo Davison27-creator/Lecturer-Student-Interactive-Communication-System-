@@ -1,0 +1,1429 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard - Lecturer-Student System</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <style>
+    :root{
+      --glass-bg: rgba(255,255,255,0.06);
+      --card-blur: 8px;
+      --accent1: #4f46e5;
+      --accent2: #7c3aed;
+    }
+    body{
+      min-height:100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #0b1220 40%, #081028 100%);
+      color:#e6eef8;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      margin:0;
+    }
+    .app-shell{display:flex;gap:1rem;min-height:100vh}
+    .sidebar{
+      width:260px;padding:22px;backdrop-filter: blur(6px);background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));border-right:1px solid rgba(255,255,255,0.04);
+    }
+    .brand{display:flex;align-items:center;gap:.6rem;font-weight:700}
+    .brand .logo{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;color:white;font-weight:800}
+    .nav-link{color:var(--muted,#cfe5ff);display:flex;align-items:center;gap:.6rem;padding:.6rem;border-radius:8px;cursor:pointer}
+    .nav-link:hover{background:rgba(255,255,255,0.03);color:white}
+    .nav-link.active{background:rgba(255,255,255,0.03);color:white}
+    .main{flex:1;padding:28px}
+    .card-glass{background:var(--glass-bg);padding:18px;border-radius:14px;box-shadow: 0 6px 18px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.04);backdrop-filter: blur(var(--card-blur));}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+    .stat-card{padding:16px;border-radius:12px;display:flex;align-items:center;gap:12px}
+    .stat-icon{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+    .table thead th{border-bottom:1px solid rgba(255,255,255,0.06)}
+    .table tbody tr{background:transparent}
+    @media (max-width:900px){.sidebar{display:none}}
+    .small-muted{font-size:12px;opacity:0.75}
+    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.06); color: #e6eef8; }
+    
+    /* Dark mode for form controls */
+    .form-control, .form-select {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e6eef8;
+    }
+    .form-control:focus, .form-select:focus {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent1);
+        color: #e6eef8;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+    }
+    .form-control:disabled {
+        background-color: rgba(255, 255, 255, 0.02);
+        opacity: 0.6;
+    }
+    .form-select option {
+        background: #0f172a;
+        color: #e6eef8;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand mb-4">
+        <div class="logo">LS</div>
+        <div>
+          <div style="font-size:15px">Lecturer-Student</div>
+          <small style="opacity:0.7">Admin Panel</small>
+        </div>
+      </div>
+
+      <nav class="d-flex flex-column gap-1">
+        <a class="nav-link active" data-section="overview"><i class="bi bi-speedometer2"></i> Dashboard Overview</a>
+        <a class="nav-link" data-section="users"><i class="bi bi-people"></i> Manage Users</a>
+        <a class="nav-link" data-section="courses"><i class="bi bi-book"></i> Manage Courses</a>
+        <a class="nav-link" data-section="materials"><i class="bi bi-folder2-open"></i> Materials & Assignments</a>
+        <a class="nav-link" data-section="announcements"><i class="bi bi-megaphone"></i> Announcements</a>
+        <a class="nav-link" data-section="analytics"><i class="bi bi-graph-up"></i> Reports & Analytics</a>
+        <a class="nav-link" data-section="settings"><i class="bi bi-gear"></i> Settings</a>
+      </nav>
+
+      <div class="mt-4 pt-3 border-top" style="opacity:0.9">
+        <small>Profile</small>
+        <div class="d-flex align-items-center gap-2 mt-2">
+          <img id="adminAvatarSmall" src="school.jpg" style="width:44px;height:44px;border-radius:8px;">
+          <div>
+            <div id="adminNameSmall" style="font-weight:700">Admin</div>
+            <small id="adminEmailSmall" style="opacity:0.7">admin@example.com</small>
+          </div>
+        </div>
+        <div class="mt-3">
+          <button class="btn btn-sm btn-outline-light" id="logoutBtn">Logout</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="overview" class="section active-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3>Dashboard Overview</h3>
+          <div>
+            <button class="btn btn-sm btn-light me-2" id="refreshBtn"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            <button class="btn btn-sm btn-primary" id="globalAnnounceBtn"><i class="bi bi-megaphone"></i> New Announcement</button>
+          </div>
+        </div>
+
+        <div class="card-glass mb-3">
+          <div class="stats-grid" id="statsGrid">
+            </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-lg-7">
+            <div class="card-glass p-3 mb-3">
+              <h6>Student Registration Growth (Last 6 weeks)</h6>
+              <canvas id="growthChart" style="height:240px"></canvas>
+            </div>
+
+            <div class="card-glass p-3 mb-3">
+              <h6>Activity Snapshot</h6>
+              <div id="activitySnapshot" class="row g-3 mt-2"></div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card-glass p-3 mb-3">
+              <h6>Most Joined Courses</h6>
+              <canvas id="topCoursesChart" style="height:280px"></canvas>
+            </div>
+
+            <div class="card-glass p-3">
+              <h6>Latest Uploads</h6>
+              <ul id="latestUploads" class="list-group list-group-flush mt-2" style="max-height:260px;overflow:auto"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="users" class="section" style="display:none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3>Manage Users</h3>
+          <div>
+            <input id="userSearch" class="form-control form-control-sm" placeholder="Search by name or email" style="width:260px;display:inline-block">
+          </div>
+        </div>
+
+        <div class="card-glass p-3">
+          <table class="table table-borderless table-hover text-light">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="courses" class="section" style="display:none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3>Manage Courses</h3>
+          <button class="btn btn-sm btn-primary" id="newCourseBtn"><i class="bi bi-plus"></i> Create New Course</button>
+        </div>
+        <div class="card-glass p-3">
+          <table class="table table-borderless table-hover text-light">
+            <thead>
+              <tr>
+                <th>Course Name</th>
+                <th>Code</th>
+                <th>Lecturer</th>
+                <th>Students Joined</th>
+                <th>Created On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="coursesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="materials" class="section" style="display:none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3>Materials & Assignments</h3>
+        </div>
+        <div class="card-glass p-3">
+          <table class="table table-borderless table-hover text-light">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Uploaded By</th>
+                <th>Course</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="materialsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="announcements" class="section" style="display:none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3>Announcements</h3>
+          <button class="btn btn-sm btn-primary" id="newAnnBtn"><i class="bi bi-plus"></i> New Announcement</button>
+        </div>
+        <div class="card-glass p-3">
+          <div id="announcementsList"></div>
+        </div>
+      </section>
+
+      <section id="analytics" class="section" style="display:none">
+        <h3>Reports & Analytics</h3>
+        <div class="card-glass p-3 mt-3">
+          <h6>Most Active Lecturers</h6>
+          <canvas id="lecturerActivityChart" style="height:240px"></canvas>
+        </div>
+        <div class="card-glass p-3 mt-4">
+    <h6>Top 5 Most Enrolled Courses</h6>
+    <table class="table table-borderless table-hover text-light table-sm mt-3">
+        <thead>
+            <tr>
+                <th>Course Name</th>
+                <th>Enrollment Count</th>
+            </tr>
+        </thead>
+        <tbody id="topCoursesTableBody">
+            <tr><td colspan="2" class="small-muted">Loading course data...</td></tr>
+        </tbody>
+    </table>
+</div>
+<div class="card-glass p-3 mt-4">
+    <h6>Courses with Zero Enrollment</h6>
+    <ul id="zeroEnrollmentList" class="list-group list-group-flush mt-3">
+        </ul>
+</div>
+      </section>
+
+
+
+      <section id="settings" class="section" style="display:none">
+        <h3>Settings</h3>
+        <div class="card-glass p-3 mt-3">
+          <form id="settingsForm">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label>School Name</label>
+                <input class="form-control" id="schoolName" />
+              </div>
+              <div class="col-md-6">
+                <label>Semester Timeline</label>
+                <input type="text" class="form-control" id="semesterTimeline" placeholder="e.g. 2025-10-01 to 2026-02-28" />
+              </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+              <div class="col-md-6">
+                <label>Upload School Logo</label>
+                <input type="file" id="logoFile" class="form-control form-control-sm" />
+                <small class="small-muted">Logo will be stored in Supabase storage</small>
+              </div>
+              <div class="col-md-6">
+                <label>Current Logo Preview</label>
+                <div class="card-glass p-2">
+                  <img id="logoPreview" src="" alt="Logo" style="max-height:60px"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-light">
+        <div class="modal-header border-bottom-0">
+          <h5 class="modal-title">Confirm</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="confirmBody">Are you sure?</div>
+        <div class="modal-footer border-top-0">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-danger" id="confirmYes">Yes, do it</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+ <!-- FIXED MODAL STRUCTURE -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    
+                    <div class="mb-3">
+                        <label for="editUserName" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="editUserName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editUserEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="editUserEmail" disabled>
+                        <small>Email (auth ID) cannot be changed.</small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editUserRole" class="form-label">Role</label>
+                            <select id="editUserRole" class="form-select">
+                                <option value="student">Student</option>
+                                <option value="lecturer">Lecturer</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editUserStatus" class="form-label">Status</label>
+                            <select id="editUserStatus" class="form-select">
+                                <option value="active">Active</option>
+                                <option value="pending">Pending</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveUserChangesBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="newAnnModal" tabindex="-1" aria-labelledby="newAnnModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title" id="newAnnModalLabel">New Global Announcement</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newAnnForm">
+                    <div class="mb-3">
+                        <label for="annTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="annTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="annMessage" class="form-label">Message</label>
+                        <textarea class="form-control" id="annMessage" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="annAudience" class="form-label">Target Audience</label>
+                        <select id="annAudience" class="form-select" required>
+                            <option value="all">All Users (Students & Lecturers)</option>
+                            <option value="students">Students Only</option>
+                            <option value="lecturers">Lecturers Only</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="postAnnBtn">Post Announcement</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+  <script>
+/* =========================
+   Replace these with your project's values
+   ========================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDT-7UYGrR_1_2HgosPNo8qGJNAGBCyHJg",
+  authDomain: "lecturer-student-project.firebaseapp.com",
+  projectId: "lecturer-student-project",
+  storageBucket: "lecturer-student-project.appspot.com",
+  messagingSenderId: "266517931898",
+  appId: "1:266517931898:web:f48b4af12fdc81001058c3"
+};
+
+const SUPABASE_URL = "https://jkbbxyxpvwyrwuscujwj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprYmJ4eXhwdnd5cnd1c2N1andqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMzg5MjUsImV4cCI6MjA3MzgxNDkyNX0.aTcdR870dKn5bXMDm06wrCDnp7usG8qcU-BaS81ubP4";
+const SUPABASE_BUCKET = "Lecturer-Student Storage";
+
+/* =========================
+   Init Firebase and Supabase
+   ========================= */
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* =========================
+   UI references
+   ========================= */
+const statsGrid = document.getElementById('statsGrid');
+const usersTable = document.getElementById('usersTable');
+const coursesTable = document.getElementById('coursesTable');
+const materialsTable = document.getElementById('materialsTable');
+const latestUploads = document.getElementById('latestUploads');
+const announcementsList = document.getElementById('announcementsList');
+const activitySnapshot = document.getElementById('activitySnapshot');
+
+const adminAvatarSmall = document.getElementById('adminAvatarSmall');
+const adminNameSmall = document.getElementById('adminNameSmall');
+const adminEmailSmall = document.getElementById('adminEmailSmall');
+
+const logoFileEl = document.getElementById('logoFile');
+const logoPreview = document.getElementById('logoPreview');
+const schoolNameInput = document.getElementById('schoolName');
+const semesterTimelineInput = document.getElementById('semesterTimeline');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+
+const refreshBtn = document.getElementById('refreshBtn');
+const globalAnnounceBtn = document.getElementById('globalAnnounceBtn');
+const newAnnBtn = document.getElementById('newAnnBtn');
+
+let growthChart = null, topCoursesChart = null, lecturerActivityChart = null;
+let currentAdmin = null, currentAdminDoc = null;
+
+/* =========================
+   Role-based access: ensure only admins can view this page
+   ========================= */
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+  try {
+    const ud = await db.collection('users').doc(user.uid).get();
+    if (!ud.exists) {
+      // no user doc -> redirect
+      await auth.signOut();
+      window.location.href = "login.html";
+      return;
+    }
+    const udata = ud.data();
+    if (udata.role !== 'admin') {
+      alert('Access Denied. Admins only.');
+      await auth.signOut();
+      window.location.href = "login.html";
+      return;
+    }
+    currentAdmin = user;
+    currentAdminDoc = ud;
+    adminNameSmall.textContent = udata.name || (user.displayName || 'Admin');
+    adminEmailSmall.textContent = udata.email || user.email;
+    adminAvatarSmall.src = udata.photoURL || user.photoURL || 'school.jpg';
+
+    // load page data
+    await refreshAll();
+    // load settings preview
+    loadSettings();
+  } catch (err) {
+    console.error('Auth check error', err);
+    alert('Error verifying admin. See console.');
+    await auth.signOut();
+    window.location.href = "login.html";
+  }
+});
+
+/* =========================
+   Simple client-side section router
+   ========================= */
+document.querySelectorAll('.nav-link').forEach(el=>{
+  el.addEventListener('click', (e)=>{
+    document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
+    el.classList.add('active');
+    const section = el.getAttribute('data-section');
+    document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+    document.getElementById(section).style.display='block';
+  });
+});
+
+/* =========================
+   Helper: create stat cards
+   ========================= */
+function makeStatCard(title, value, iconHtml, color){
+  const wrapper = document.createElement('div');
+  wrapper.className='card-glass stat-card';
+  wrapper.innerHTML = `
+    <div style="flex:1">
+      <div style="font-size:12px;opacity:0.75">${title}</div>
+      <div style="font-size:20px;font-weight:700">${value}</div>
+    </div>
+    <div class="stat-icon" style="background:linear-gradient(135deg, ${color}, rgba(255,255,255,0.06))">${iconHtml}</div>
+  `;
+  return wrapper;
+}
+
+/* =========================
+   Overview loader
+   ========================= */
+async function loadOverview(){
+  // counts
+  const usersSnap = await db.collection('users').get();
+  const coursesSnap = await db.collection('courses').get();
+  const assignmentsSnap = await db.collection('assignments').get();
+
+  const totalLecturers = usersSnap.docs.filter(d=>d.data().role==='lecturer').length;
+  const totalStudents = usersSnap.docs.filter(d=>d.data().role==='student').length;
+  const activeCourses = coursesSnap.size;
+  const totalAssignments = assignmentsSnap.size;
+
+  statsGrid.innerHTML='';
+  statsGrid.appendChild(makeStatCard('Total Lecturers', totalLecturers, '<i class="bi bi-person-badge" style="font-size:18px"></i>', '#7c3aed'));
+  statsGrid.appendChild(makeStatCard('Total Students', totalStudents, '<i class="bi bi-mortarboard" style="font-size:18px"></i>', '#06b6d4'));
+  statsGrid.appendChild(makeStatCard('Active Courses', activeCourses, '<i class="bi bi-journal-bookmark" style="font-size:18px"></i>', '#2563eb'));
+  statsGrid.appendChild(makeStatCard('Total Assignments', totalAssignments, '<i class="bi bi-file-earmark-text" style="font-size:18px"></i>', '#f97316'));
+
+  // studentCourses for top courses & activity
+  const studentCoursesSnap = await db.collection('studentCourses').get();
+  const courseCounts = {};
+  studentCoursesSnap.docs.forEach(d=>{
+    const c = d.data().courseId;
+    courseCounts[c] = (courseCounts[c]||0)+1;
+  });
+  const courseNames = {};
+  coursesSnap.docs.forEach(d=>courseNames[d.id] = d.data().name || d.data().courseName || d.data().title || 'Untitled');
+
+  const courseEntries = Object.keys(courseCounts).map(k=>({id:k,name:courseNames[k]||k,count:courseCounts[k]}));
+  courseEntries.sort((a,b)=>b.count - a.count);
+  const topCourses = courseEntries.slice(0,6);
+  renderTopCoursesChart(topCourses);
+
+  // latest uploads
+  const materialsSnap = await db.collection('materials').orderBy('createdAt','desc').limit(8).get();
+  latestUploads.innerHTML='';
+  materialsSnap.docs.forEach(d=>{
+    const data = d.data();
+    const li = document.createElement('li');
+    li.className='list-group-item bg-transparent text-light';
+    const when = data.createdAt ? (data.createdAt.seconds ? new Date(data.createdAt.seconds*1000) : new Date(data.createdAt)) : new Date();
+    li.innerHTML = `<div><strong>${data.title||data.materialTitle||'Untitled'}</strong><div style="font-size:12px;opacity:0.7">${data.uploadedByName||data.uploader||data.lecturerName||'Unknown'} · ${when.toLocaleString()}</div></div>`;
+    latestUploads.appendChild(li);
+  });
+
+  // activity snapshot: top engaged students (count joined courses)
+  const usersDocs = usersSnap.docs;
+  const students = usersDocs.filter(d=>d.data().role==='student');
+  const enrollCounts = {};
+  studentCoursesSnap.docs.forEach(d=>{const sid = d.data().studentId; enrollCounts[sid] = (enrollCounts[sid]||0) + 1;});
+  const topEngaged = Object.keys(enrollCounts).map(sid=>({id:sid,count:enrollCounts[sid]})).sort((a,b)=>b.count - a.count).slice(0,5);
+  activitySnapshot.innerHTML='';
+  topEngaged.forEach(te=>{
+    const userDoc = usersDocs.find(d=>d.id === te.id);
+    const name = userDoc ? (userDoc.data().name || userDoc.data().email) : te.id;
+    const card = document.createElement('div');
+    card.className='col-12';
+    card.innerHTML = `<div class="p-2 card-glass"><div style="display:flex;justify-content:space-between"><div><strong>${name}</strong><div style="font-size:12px;opacity:0.75">Joined ${te.count} courses</div></div><div style="font-weight:700">🔥 ${te.count}</div></div></div>`;
+    activitySnapshot.appendChild(card);
+  });
+
+  // growth chart uses usersSnap
+  renderGrowthChart(usersSnap.docs);
+}
+
+/* =========================
+   Charts
+   ========================= */
+function renderGrowthChart(userDocs){
+  // last 6 weeks (6 points)
+  const now = new Date();
+  const weeks = [];
+  for(let i=5;i>=0;i--){
+    const start = new Date(now);
+    start.setDate(now.getDate() - i*7);
+    start.setHours(0,0,0,0);
+    weeks.push(start);
+  }
+  const labels = weeks.map(w => {
+    const d = new Date(w);
+    return `${d.getMonth()+1}/${d.getDate()}`;
+  });
+  const counts = weeks.map((start, idx) => {
+    const end = new Date(start); end.setDate(end.getDate() + 7);
+    return userDocs.filter(doc => {
+      const ts = doc.data().createdAt;
+      if(!ts) return false;
+      const dt = ts.seconds ? new Date(ts.seconds*1000) : new Date(ts);
+      return dt >= start && dt < end;
+    }).length;
+  });
+
+  const ctx = document.getElementById('growthChart');
+  if (growthChart) growthChart.destroy();
+  growthChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'New users',
+        data: counts,
+        borderColor: '#60a5fa',
+        backgroundColor: 'rgba(96,165,250,0.18)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
+}
+
+function renderTopCoursesChart(topCourses){
+  const labels = topCourses.map(c=>c.name || c.id);
+  const data = topCourses.map(c=>c.count);
+  const ctx = document.getElementById('topCoursesChart');
+  if (topCoursesChart) topCoursesChart.destroy();
+  topCoursesChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Enrollments', data, backgroundColor: '#34d399' }]
+    },
+    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+  });
+}
+
+function renderLecturerActivityChart(entries){
+  const labels = entries.map(e=>e.user || e.lecturer || 'Unknown');
+  const data = entries.map(e=>e.count);
+  const ctx = document.getElementById('lecturerActivityChart');
+  if (lecturerActivityChart) lecturerActivityChart.destroy();
+  lecturerActivityChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Uploads', data, backgroundColor: '#f59e0b' }] },
+    options: { responsive: true }
+  });
+}
+
+/* =================================
+  UPDATED: Manage Users
+=================================
+*/
+async function loadUsers(searchTerm = ''){
+  const snap = await db.collection('users').orderBy('createdAt','desc').get();
+  const docs = snap.docs.filter(d => {
+    const data = d.data();
+    if(!searchTerm) return true;
+    const q = searchTerm.toLowerCase();
+    return (data.name || '').toLowerCase().includes(q) || (data.email || '').toLowerCase().includes(q);
+  });
+
+  usersTable.innerHTML = '';
+  docs.forEach(d=>{
+    const data = d.data();
+    const name = data.name || 'No name';
+    const email = data.email || '';
+    const role = data.role || 'student';
+    const status = data.status || 'active';
+    const createdAt = data.createdAt ? (data.createdAt.seconds ? new Date(data.createdAt.seconds*1000) : new Date(data.createdAt)) : new Date();
+    
+    // Create a status badge
+    let statusBadge = '';
+    switch (status) {
+      case 'active':
+        statusBadge = `<span class="badge bg-success">Active</span>`;
+        break;
+      case 'pending':
+        statusBadge = `<span class="badge bg-warning text-dark">Pending</span>`;
+        break;
+      case 'suspended':
+        statusBadge = `<span class="badge bg-danger">Suspended</span>`;
+        break;
+      default:
+        statusBadge = `<span class="badge bg-secondary">${status}</span>`;
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${name}</td>
+      <td>${email}</td>
+      <td>${role}</td>
+      <td>${statusBadge}</td>
+      <td>${createdAt.toLocaleDateString()}</td>
+      <td>
+        <button class="btn btn-sm btn-info me-1" onclick="openEditUserModal('${d.id}')">
+          <i class="bi bi-pencil-fill"></i> Edit
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deleteUser('${d.id}')">
+          <i class="bi bi-trash-fill"></i> Delete
+        </button>
+      </td>
+    `;
+    usersTable.appendChild(tr);
+  });
+}
+
+window.deleteUser = async function(uid){
+  if(!confirm('Delete user permanently? This will only delete their data, not their login. This cannot be undone.')) return;
+  
+  try {
+    // Deleting from Auth requires a backend function. 
+    // We delete the Firestore doc, which will prevent them from logging in
+    // based on our current auth.onAuthStateChanged logic.
+    await db.collection('users').doc(uid).delete();
+    alert('User document deleted.');
+    await loadUsers(); // Refresh the table
+  } catch (err) {
+    console.error('Error deleting user doc:', err);
+    alert(`Error: ${err.message}`);
+  }
+};
+
+/* =================================
+  NEW: Edit User Modal Logic
+=================================
+*/
+
+// Create a reference to the Bootstrap modal instance
+// We need to check if bootstrap is loaded first
+let userModal, newAnnModal; // Add newAnnModal here
+if (window.bootstrap) {
+   userModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+   newAnnModal = new bootstrap.Modal(document.getElementById('newAnnModal')); // Add this line
+} else {
+    console.error("Bootstrap JS not loaded. Modals will not work.");
+}
+
+// References to the modal's form elements
+const editUserId = document.getElementById('editUserId');
+const editUserName = document.getElementById('editUserName');
+const editUserEmail = document.getElementById('editUserEmail');
+const editUserRole = document.getElementById('editUserRole');
+const editUserStatus = document.getElementById('editUserStatus');
+
+/**
+ * Opens the "Edit User" modal and populates it with data
+ * from the selected user.
+ */
+window.openEditUserModal = async function(uid) {
+  try {
+    const userDoc = await db.collection('users').doc(uid).get();
+    if (!userDoc.exists) {
+      alert('User not found!');
+      return;
+    }
+    
+    const data = userDoc.data();
+    
+    // Populate the form
+    editUserId.value = uid;
+    editUserName.value = data.name || '';
+    editUserEmail.value = data.email || '';
+    editUserRole.value = data.role || 'student';
+    editUserStatus.value = data.status || 'active';
+    
+    // Show the modal
+    if(userModal) userModal.show();
+    
+  } catch (err) {
+    console.error('Error opening user modal:', err);
+    alert(`Error: ${err.message}`);
+  }
+}
+
+/**
+ * Saves the changes from the modal back to Firestore.
+ */
+async function saveUserChanges() {
+  const uid = editUserId.value;
+  if (!uid) {
+    alert('No user ID found. Cannot save.');
+    return;
+  }
+
+  const updatedData = {
+    name: editUserName.value.trim(),
+    role: editUserRole.value,
+    status: editUserStatus.value,
+    // We don't update email
+  };
+
+  try {
+    await db.collection('users').doc(uid).update(updatedData);
+    
+    alert('User updated successfully!');
+    if(userModal) userModal.hide(); // Hide the modal
+    await loadUsers(); // Refresh the user table
+    
+  } catch (err) {
+    console.error('Error saving user changes:', err);
+    alert(`Error: ${err.message}`);
+  }
+}
+
+// Connect the "Save Changes" button in the modal
+document.getElementById('saveUserChangesBtn').addEventListener('click', saveUserChanges);
+
+
+
+
+/* =========================
+   Manage Courses
+   ========================= */
+
+/* =================================
+   Manage Courses (READ & DELETE ONLY)
+   ================================= */
+
+// Helper to get lecturer name for the table (fetches from Firestore on demand)
+async function getLecturerName(lecturerId) {
+    if (!lecturerId) return 'TBA';
+    try {
+        const doc = await db.collection('users').doc(lecturerId).get();
+        // Return name, or fall back to email if name is missing
+        return doc.exists ? doc.data().name || doc.data().email || 'Unknown' : 'Unknown';
+    } catch {
+        return 'Unknown';
+    }
+}
+
+async function loadCourses(){
+  const snap = await db.collection('courses').orderBy('createdAt','desc').get();
+  const studentCoursesSnap = await db.collection('studentCourses').get();
+
+  coursesTable.innerHTML = '';
+  
+  // Create a map of courseId to enrollment count for quick lookup
+  const enrollmentCounts = {};
+  studentCoursesSnap.docs.forEach(s => {
+      const courseId = s.data().courseId;
+      enrollmentCounts[courseId] = (enrollmentCounts[courseId] || 0) + 1;
+  });
+  
+  // Use Promise.all to fetch all lecturer names concurrently for efficiency
+  const coursePromises = snap.docs.map(async d => {
+    const data = d.data();
+    const joined = enrollmentCounts[d.id] || 0;
+    const createdAt = data.createdAt ? (data.createdAt.seconds ? new Date(data.createdAt.seconds*1000) : new Date(data.createdAt)) : new Date();
+    
+    // *** FIX: Calls the local helper function instead of relying on global allLecturers ***
+    const lecturerName = await getLecturerName(data.lecturerId); 
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${data.name || data.courseName || 'Untitled'}</td>
+      <td>${data.courseCode || data.code || ''}</td>
+      <td>${lecturerName}</td>
+      <td>${joined}</td>
+      <td>${createdAt.toLocaleDateString()}</td>
+      <td>
+        <button class="btn btn-sm btn-ghost me-1" onclick="viewCourseMembers('${d.id}')">
+          <i class="bi bi-people-fill"></i> View Members
+        </button>
+        <button class="btn btn-sm btn-danger" onclick="deleteCourse('${d.id}')">
+          <i class="bi bi-trash-fill"></i> Delete
+        </button>
+      </td>
+    `;
+    return tr;
+  });
+  
+  // Wait for all rows to be created and append them
+  const rows = await Promise.all(coursePromises);
+  rows.forEach(row => coursesTable.appendChild(row));
+}
+
+// Add this function
+window.deleteMaterial = async function(materialId, filePath = '') {
+    if (!confirm('Delete this material/assignment permanently?')) return;
+    
+    try {
+        // Delete from Firestore
+        await db.collection('materials').doc(materialId).delete();
+        
+        // If there's a file path, try to delete from Supabase storage
+        if (filePath) {
+            try {
+                // Extract the path from the full URL or use the stored path
+                const pathParts = filePath.split('/');
+                const fileName = pathParts[pathParts.length - 1];
+                const { error } = await supabase.storage
+                    .from(SUPABASE_BUCKET)
+                    .remove([`materials/${fileName}`]); // Adjust path as needed
+                    
+                if (error) {
+                    console.warn('Could not delete file from storage:', error);
+                }
+            } catch (storageErr) {
+                console.warn('Error deleting from storage:', storageErr);
+            }
+        }
+        
+        alert('Material deleted successfully!');
+        await loadMaterials(); // Refresh the materials table
+        
+    } catch (err) {
+        console.error('Error deleting material:', err);
+        alert(`Error: ${err.message}`);
+    }
+};
+
+/* =================================
+   Course Actions (DELETE & VIEW) - Your current logic is fine, but I've kept it here for completeness
+   ================================= */
+window.viewCourseMembers = async function(courseId){
+  const sc = await db.collection('studentCourses').where('courseId','==',courseId).get();
+  if (sc.empty) return alert('No students joined.');
+  const userIds = sc.docs.map(d=>d.data().studentId);
+  const users = [];
+  for(const uid of userIds){
+    const u = await db.collection('users').doc(uid).get();
+    users.push(u.exists ? `${u.data().name || '—'} (${u.data().email || '—'})` : uid);
+  }
+  alert('Members:\n' + users.join('\n'));
+};
+
+window.deleteCourse = async function(courseId){
+  if(!confirm('Delete this course and ALL its enrollments/materials? This action cannot be undone.')) return;
+  
+  try {
+    // 1. Delete the course document
+    await db.collection('courses').doc(courseId).delete();
+    
+    // 2. Delete student enrollments and materials (using a batch write for efficiency)
+    const sc = await db.collection('studentCourses').where('courseId','==',courseId).get();
+    const mats = await db.collection('materials').where('courseId','==',courseId).get();
+    const batch = db.batch();
+    
+    sc.docs.forEach(d => batch.delete(d.ref));
+    mats.docs.forEach(d => batch.delete(d.ref));
+
+    await batch.commit();
+    alert('Course, enrollments, and materials deleted successfully.');
+    await refreshAll();
+  } catch (err) {
+    console.error('Error deleting course:', err);
+    alert(`Error deleting course: ${err.message}`);
+  }
+};
+/* =================================
+   Materials & Assignments (READ & DELETE) - FINAL REINFORCED
+   ================================= */
+
+// Global cache for uploader names (lecturers)
+let uploaderNameCache = {}; 
+let courseNameCache = {}; // NEW CACHE FOR COURSE NAMES
+
+/**
+ * Ensures we have a local cache of all lecturer names (uploaders)
+ */
+async function loadUploaderNameCache() {
+    if (Object.keys(uploaderNameCache).length > 0) return;
+
+    const snap = await db.collection('users').where('role', '==', 'lecturer').get();
+    snap.docs.forEach(d => {
+        // Cache by UID, preferring 'name' over 'email'
+        uploaderNameCache[d.id] = d.data().name || d.data().email || 'Unknown Lecturer';
+    });
+}
+
+/**
+ * Ensures we have a local cache of all course names
+ */
+async function loadCourseNameCache() {
+    if (Object.keys(courseNameCache).length > 0) return;
+
+    const coursesSnap = await db.collection('courses').get();
+    coursesSnap.docs.forEach(d => {
+        // Cache by Course ID, preferring 'name' over 'courseCode'
+        courseNameCache[d.id] = d.data().name || d.data().courseCode || 'N/A';
+    });
+}
+
+async function loadMaterials(){
+  // 1. Load ALL Caches
+  await loadUploaderNameCache();
+  await loadCourseNameCache(); // Wait for course names to be ready
+
+  // 2. Load Materials/Assignments
+  const snap = await db.collection('materials').orderBy('createdAt','desc').get();
+  materialsTable.innerHTML = '';
+  
+  snap.docs.forEach(d=>{
+    const data = d.data();
+    
+    // Determine the Uploader's Name (Robustly from cache)
+    let uploaderName = data.uploadedByName || data.uploader || data.lecturerName || 'Unknown';
+    if (data.lecturerId && uploaderNameCache[data.lecturerId]) {
+        uploaderName = uploaderNameCache[data.lecturerId];
+    }
+    
+    // Determine Course Name (Robustly from cache)
+    // Checks the cache first, then falls back to any name stored directly on the material doc
+    const courseName = courseNameCache[data.courseId] || data.courseName || 'N/A';
+    
+    const createdAt = data.createdAt ? (data.createdAt.seconds ? new Date(data.createdAt.seconds*1000) : new Date(data.createdAt)) : new Date();
+    
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${data.title || data.materialTitle || 'Untitled'}</td>
+      <td><strong>${uploaderName}</strong></td> 
+      <td><strong>${courseName}</strong></td> 
+      <td>${createdAt.toLocaleDateString()}</td>
+      <td>
+        <span class="badge ${data.type === 'assignment' ? 'bg-primary' : 'bg-secondary'}">
+          ${data.type || 'material'}
+        </span>
+      </td>
+      <td>
+        <a href="${data.fileURL || '#'}" target="_blank" class="btn btn-sm btn-ghost me-1" ${!data.fileURL ? 'disabled' : ''}>
+          <i class="bi bi-eye-fill"></i> View
+        </a>
+        <button class="btn btn-sm btn-danger" onclick="deleteMaterial('${d.id}', '${data.filePath || ''}')">
+          <i class="bi bi-trash-fill"></i> Delete
+        </button>
+      </td>
+    `;
+    materialsTable.appendChild(tr);
+  });
+}
+/* =================================
+   Announcements (CREATE) Logic - SAFE RESET IMPLEMENTED
+   ================================= */
+
+// Event listener for the dashboard button (e.g., globalAnnounceBtn)
+document.getElementById('globalAnnounceBtn').addEventListener('click', () => {
+    const formEl = document.getElementById('newAnnForm');
+    if (formEl) {
+        formEl.reset(); // Safely reset the form
+    }
+    newAnnModal.show();
+});
+
+// Event listener for the sidebar button (e.g., newAnnBtn)
+document.getElementById('newAnnBtn').addEventListener('click', () => {
+    const formEl = document.getElementById('newAnnForm');
+    if (formEl) {
+        formEl.reset(); // Safely reset the form
+    }
+    newAnnModal.show();
+});
+
+// Event listener for posting the announcement
+document.getElementById('postAnnBtn').addEventListener('click', async () => {
+    const title = document.getElementById('annTitle').value.trim();
+    const message = document.getElementById('annMessage').value.trim();
+    const audience = document.getElementById('annAudience').value;
+
+    if (!title || !message) {
+        alert('Title and message are required.');
+        return;
+    }
+    
+    // Disable button while posting
+    document.getElementById('postAnnBtn').disabled = true;
+
+    try {
+        await db.collection('announcements').add({
+            title: title,
+            message: message,
+            audience: audience, // <-- THIS IS THE KEY FIELD FOR FILTERING
+            createdBy: currentAdmin.uid,
+            createdByName: currentAdminDoc.data().name || 'Admin',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        alert('Announcement posted successfully!');
+        newAnnModal.hide();
+        await loadAnnouncements(); // Refresh the announcements list
+
+    } catch (err) {
+        console.error('Error posting announcement:', err);
+        alert(`Error: ${err.message}`);
+    } finally {
+        document.getElementById('postAnnBtn').disabled = false;
+    }
+});
+
+/* =================================
+   Announcements (READ & DELETE) Logic
+   ================================= */
+
+// ** Ensure your loadAnnouncements function looks like this (it was fine before, but confirm the Delete button is present) **
+async function loadAnnouncements(){
+  const snap = await db.collection('announcements').orderBy('createdAt','desc').get();
+  announcementsList.innerHTML = '';
+  snap.docs.forEach(d=>{
+    const a = d.data();
+    const createdAt = a.createdAt ? (a.createdAt.seconds ? new Date(a.createdAt.seconds*1000) : new Date(a.createdAt)) : new Date();
+    const div = document.createElement('div');
+    div.className='p-3 mb-2 card-glass';
+    
+    // Display the target audience clearly
+    let audienceText = '';
+    switch (a.audience) {
+        case 'students': audienceText = 'Students Only'; break;
+        case 'lecturers': audienceText = 'Lecturers Only'; break;
+        default: audienceText = 'All Users';
+    }
+    
+    div.innerHTML = `
+        <div style="display:flex;justify-content:space-between">
+            <div>
+                <strong>${a.title}</strong>
+                <div style="font-size:13px;opacity:0.8">
+                    Target: 
+                    <span class="badge ${a.audience === 'all' ? 'bg-info' : 'bg-warning text-dark'}">${audienceText}</span> 
+                    · ${createdAt.toLocaleString()}
+                </div>
+            </div>
+            <div>
+                <button class='btn btn-sm btn-danger' onclick="deleteAnnouncement('${d.id}')">Delete</button>
+            </div>
+        </div>
+        <div class='mt-2' style='opacity:0.9'>${a.message}</div>
+    `;
+    announcementsList.appendChild(div);
+  });
+}
+
+window.deleteAnnouncement = async function(id){
+  if(!confirm('Delete this announcement?')) return;
+  await db.collection('announcements').doc(id).delete();
+  await loadAnnouncements(); // Use loadAnnouncements() instead of refreshAll for faster UI update
+};
+
+
+/* =========================
+   Analytics (lecturer uploads)
+   ========================= */
+async function loadAnalytics(){
+    try {
+        // Fetch materials data, ordered by upload date
+        const materialsSnap = await db.collection('materials').get();
+        const counts = {};
+        
+        // Tally uploads by lecturer name/ID
+        materialsSnap.docs.forEach(d=>{
+            // Use the first available author field for identification
+            const l = d.data().uploadedByName || d.data().lecturer || d.data().uploadedBy || 'Unknown';
+            counts[l] = (counts[l]||0) + 1;
+        });
+        
+        // Convert to array, sort by count (desc), and take the top 8
+        const entries = Object.keys(counts)
+            .map(k=>({ user:k, count:counts[k]}))
+            .sort((a,b)=>b.count-a.count)
+            .slice(0,8);
+            
+        renderLecturerActivityChart(entries);
+
+    } catch (error) {
+        console.error("Error loading lecturer activity analytics:", error);
+        // Display an error on the analytics section if needed
+    }
+}
+
+/* =========================
+   Settings (with Supabase storage for logo)
+   ========================= */
+async function loadSettings(){
+  const doc = await db.collection('settings').doc('global').get();
+  if (doc.exists){
+    const s = doc.data();
+    schoolNameInput.value = s.schoolName || '';
+    semesterTimelineInput.value = s.semesterTimeline || '';
+    if (s.logoUrl) {
+      logoPreview.src = s.logoUrl;
+    }
+  } else {
+    // no settings yet
+    logoPreview.src = '';
+  }
+}
+
+logoFileEl.addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  // small preview
+  const url = URL.createObjectURL(f);
+  logoPreview.src = url;
+});
+
+/* =========================
+   Analytics: Top Courses Table Logic
+   ========================= */
+async function loadTopCoursesReport() {
+    const tableBody = document.getElementById('topCoursesTableBody');
+    tableBody.innerHTML = '<tr><td colspan="2" class="small-muted">Calculating...</td></tr>';
+
+    try {
+        const studentCoursesSnap = await db.collection('studentCourses').get();
+        const coursesSnap = await db.collection('courses').get();
+        
+        const courseNames = {};
+        coursesSnap.docs.forEach(d => courseNames[d.id] = d.data().name || d.data().courseName || 'Untitled Course');
+        
+        const courseEnrollmentCounts = {};
+        studentCoursesSnap.docs.forEach(d => {
+            // Count enrollments by Course ID
+            const courseId = d.data().courseId;
+            courseEnrollmentCounts[courseId] = (courseEnrollmentCounts[courseId] || 0) + 1;
+        });
+
+        // Convert to array and sort
+        const topCourses = Object.keys(courseEnrollmentCounts)
+            .map(id => ({
+                name: courseNames[id] || `Unknown Course (${id.substring(0, 4)}...)`,
+                count: courseEnrollmentCounts[id]
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5); // Take top 5
+
+        if (topCourses.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="2" class="text-center">No courses enrolled yet.</td></tr>';
+            return;
+        }
+
+        let html = '';
+        topCourses.forEach(course => {
+            html += `
+                <tr>
+                    <td><i class="bi bi-journal me-2"></i>${course.name}</td>
+                    <td><span class="badge" style="background-color: var(--accent1);">${course.count}</span></td>
+                </tr>
+            `;
+        });
+        tableBody.innerHTML = html;
+
+    } catch (err) {
+        console.error("Error loading top courses report:", err);
+        tableBody.innerHTML = '<tr><td colspan="2" class="text-danger">Failed to load data. Permissions issue?</td></tr>';
+    }
+}
+
+/* =========================
+   Analytics: Zero Enrollment Logic
+   ========================= */
+async function loadZeroEnrollmentReport() {
+    const listEl = document.getElementById('zeroEnrollmentList');
+    listEl.innerHTML = '<li class="list-group-item bg-transparent text-light small-muted">Calculating...</li>';
+
+    try {
+        // 1. Get all enrolled course IDs
+        const studentCoursesSnap = await db.collection('studentCourses').get();
+        const enrolledCourseIds = new Set();
+        studentCoursesSnap.docs.forEach(d => enrolledCourseIds.add(d.data().courseId));
+
+        // 2. Get all created courses
+        const coursesSnap = await db.collection('courses').get();
+        const zeroEnrollmentCourses = [];
+
+        coursesSnap.docs.forEach(d => {
+            if (!enrolledCourseIds.has(d.id)) {
+                zeroEnrollmentCourses.push({
+                    name: d.data().name || d.data().courseName || 'Untitled',
+                    code: d.data().code || 'N/A'
+                });
+            }
+        });
+
+        if (zeroEnrollmentCourses.length === 0) {
+            listEl.innerHTML = '<li class="list-group-item bg-transparent text-light text-center">🎉 All courses have enrolled students!</li>';
+            return;
+        }
+
+        listEl.innerHTML = '';
+        zeroEnrollmentCourses.forEach(course => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item bg-transparent text-light border-bottom-0';
+            li.innerHTML = `<i class="bi bi-x-circle-fill text-danger me-2"></i>${course.name} <small class="small-muted">(${course.code})</small>`;
+            listEl.appendChild(li);
+        });
+
+    } catch (err) {
+        console.error("Error loading zero enrollment report:", err);
+        listEl.innerHTML = '<li class="list-group-item bg-transparent text-danger">Failed to load data.</li>';
+    }
+}
+
+/* =================================
+  COMPLETED: Save Settings
+=================================
+*/
+saveSettingsBtn.addEventListener('click', async (ev) => {
+  ev.preventDefault();
+  saveSettingsBtn.disabled = true;
+  saveSettingsBtn.textContent = 'Saving...';
+
+  try {
+    const schoolName = schoolNameInput.value.trim();
+    const semesterTimeline = semesterTimelineInput.value.trim();
+    let logoUrl = logoPreview.src || ''; // Default to existing URL
+
+    // 1. If a new file is selected, upload it to Supabase
+    const f = logoFileEl.files[0];
+    if (f) {
+      const path = `settings/logo_${Date.now()}_${f.name.replace(/\s+/g, '_')}`;
+      
+      const { data: upData, error: upError } = await supabase.storage
+        .from(SUPABASE_BUCKET) // Use your bucket variable
+        .upload(path, f);
+
+      if (upError) {
+        throw new Error(`Supabase upload error: ${upError.message}`);
+      }
+      
+      // 2. Get the public URL for the new file
+      const { data: urlData } = supabase.storage
+        .from(SUPABASE_BUCKET)
+        .getPublicUrl(upData.path);
+        
+      logoUrl = urlData.publicUrl;
+    }
+
+    // 3. Save all data to Firestore
+    const settingsData = {
+      schoolName: schoolName,
+      semesterTimeline: semesterTimeline,
+      logoUrl: logoUrl,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    // Use .set() with {merge: true} to create or update the doc
+    await db.collection('settings').doc('global').set(settingsData, { merge: true });
+
+    alert('Settings saved successfully!');
+    logoFileEl.value = null; // Clear the file input
+
+  } catch (err) {
+    console.error('Error saving settings:', err);
+    alert(`Error: ${err.message}`);
+  } finally {
+    saveSettingsBtn.disabled = false;
+    saveSettingsBtn.textContent = 'Save Settings';
+  }
+});
+
+
+/* =================================
+  NEW: Other Event Listeners
+=================================
+*/
+
+/**
+ * Main data refresh function. Called on load and by refresh button.
+ */
+/* =========================
+   Master Refresher
+   ========================= */
+async function refreshAll(){
+  try {
+    await Promise.all([
+      loadOverview(), 
+      loadUsers(),
+      loadAnnouncements(),
+      loadCourses(),
+      loadMaterials(),
+      loadSettings(),
+      loadUploaderNameCache(),
+      loadAnalytics(),
+      loadTopCoursesReport(),
+      loadZeroEnrollmentReport()
+    ]);
+  } catch(err) { 
+    console.error('Error refreshing data:', err);
+    alert('Some data failed to load. Check console for details.');
+  }
+}
+
+
+
+// Connect Refresh Button
+refreshBtn.addEventListener('click', async () => {
+  refreshBtn.disabled = true;
+  refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refreshing...'; 
+  
+  await refreshAll();
+  
+  refreshBtn.disabled = false;
+  refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refresh';
+});
+
+// Connect User Search
+document.getElementById('userSearch').addEventListener('keyup', (e) => {
+  const searchTerm = e.target.value.trim();
+  loadUsers(searchTerm);
+});
+
+
+// Connect Logout Button
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (confirm('Are you sure you want to log out?')) {
+    await auth.signOut();
+    window.location.href = 'login.html'; // Redirect to your login page
+  }
+});
+
+</script>
+</body>
+</html>
