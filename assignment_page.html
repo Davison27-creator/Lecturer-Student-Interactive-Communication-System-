@@ -103,8 +103,8 @@
 
         <div class="col-12">
           <label class="form-label">Attach File (optional)</label>
-          <input id="assignmentFile" class="form-control" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx" />
-          <div class="form-text">Optional — attach assignment sheet, dataset, etc.</div>
+          <input id="assignmentFile" class="form-control" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png" />
+          <div class="form-text">Optional — attach assignment sheet, dataset, etc. (Max 50MB)</div>
         </div>
 
         <div class="col-12">
@@ -114,8 +114,12 @@
         </div>
 
         <div class="col-12 d-flex gap-2">
-          <button type="submit" class="btn btn-primary">Create Assignment</button>
-          <a href="view-assignments.html" class="btn btn-outline-secondary">View My Assignments</a>
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <i class="bi bi-plus-circle"></i> Create Assignment
+          </button>
+          <a href="view-assignments.html" class="btn btn-outline-secondary">
+            <i class="bi bi-list-ul"></i> View My Assignments
+          </a>
         </div>
       </div>
     </form>
@@ -135,10 +139,17 @@
   (async function(){
     // ---------- CONFIG ----------
     const SUPABASE_URL = "https://jkbbxyxpvwyrwuscujwj.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprYmJ4eXhwdnd5cnd1andqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMzg5MjUsImV4cCI6MjA3MzgxNDkyNX0.aTcdR870dKn5bXMDm06wrCDnp7usG8qcU-BaS81ubP4";
-    const BUCKET_ID = "Lecturer-Student Storage";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprYmJ4eXhwdnd5cnd1c2N1andqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMzg5MjUsImV4cCI6MjA3MzgxNDkyNX0.aTcdR870dKn5bXMDm06wrCDnp7usG8qcU-BaS81ubP4";
+    const BUCKET_NAME = "Lecturer-Student Storage"; // FIXED: Changed from BUCKET_ID to BUCKET_NAME
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Initialize Supabase with error handling
+    let supabase;
+    try {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log("Supabase initialized successfully");
+    } catch (error) {
+      console.error("Supabase initialization failed:", error);
+    }
 
     const firebaseConfig = {
       apiKey: "AIzaSyDT-7UYGrR_1_2HgosPNo8qGJNAGBCyHJg",
@@ -148,6 +159,7 @@
       messagingSenderId: "266517931898",
       appId: "1:266517931898:web:f48b4af12fdc81001058c3"
     };
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
@@ -157,6 +169,7 @@
     const alertBox = document.getElementById('alertBox');
     const uploadProgress = document.querySelector('.progress');
     const uploadProgressBar = document.getElementById('uploadProgressBar');
+    const submitBtn = document.getElementById('submitBtn');
 
     function showAlert(msg, type='info', timeout=6000){
       alertBox.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
@@ -217,6 +230,10 @@
         showAlert('You must be logged in to create an assignment.', 'danger'); return;
       }
 
+      // Disable submit button to prevent double submission
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...';
+
       const courseCode = courseCodeInput.value.trim();
       const courseTitle = courseTitleInput.value.trim();
       const assignmentTitle = document.getElementById('assignmentTitle').value.trim();
@@ -227,13 +244,28 @@
       const level = document.getElementById('level').value;
       const file = document.getElementById('assignmentFile').files[0] || null;
 
+      // Validation
       if(!courseCode || !courseTitle || !assignmentTitle || !description || !date || !time || !department || !level){
-        showAlert('Please fill all required fields.', 'danger'); return;
+        showAlert('Please fill all required fields.', 'danger'); 
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Create Assignment';
+        return;
       }
 
       const deadlineISO = new Date(`${date}T${time}:00`);
       if(isNaN(deadlineISO.getTime())){
-        showAlert('Invalid deadline date/time.', 'danger'); return;
+        showAlert('Invalid deadline date/time.', 'danger');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Create Assignment';
+        return;
+      }
+
+      // File size validation (50MB limit)
+      if (file && file.size > 50 * 1024 * 1024) {
+        showAlert('File size exceeds 50MB limit. Please choose a smaller file.', 'danger');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Create Assignment';
+        return;
       }
 
       const metadata = {
@@ -245,55 +277,96 @@
         level,
         deadline: firebase.firestore.Timestamp.fromDate(deadlineISO),
         fileURL: null,
+        fileName: null,
+        fileSize: null,
         filePath: null,
         lecturerId: user.uid,
+        lecturerEmail: user.email,
         courseId: verifiedCourseId,
+        status: "active",
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
       try {
-        if(file){
+        // File upload to Supabase
+        if(file && supabase){
           uploadProgress.style.display = 'block';
           uploadProgressBar.style.width = '0%';
           uploadProgressBar.innerText = '0%';
 
-          const sanitized = file.name.replace(/\s+/g, '_');
+          // Sanitize filename
+          const sanitized = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
           const filePath = `assignments/${user.uid}/${Date.now()}_${sanitized}`;
 
-          let fake = 0;
-          const fakeTimer = setInterval(() => {
-            fake = Math.min(85, fake + Math.round(Math.random()*8));
-            uploadProgressBar.style.width = fake + '%';
-            uploadProgressBar.innerText = fake + '%';
-          }, 300);
-
-          const { data, error } = await supabase.storage.from(BUCKET_ID).upload(filePath, file, { upsert: true });
-          clearInterval(fakeTimer);
+          // Real upload with progress tracking
+          const { data, error } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false,
+              onUploadProgress: (progress) => {
+                const percent = Math.round((progress.loaded / progress.total) * 100);
+                uploadProgressBar.style.width = percent + '%';
+                uploadProgressBar.innerText = percent + '%';
+              }
+            });
 
           if(error){
             uploadProgress.style.display = 'none';
-            showAlert('File upload failed: ' + error.message, 'danger'); return;
+            console.error('Supabase upload error:', error);
+            showAlert('File upload failed: ' + error.message, 'danger'); 
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Create Assignment';
+            return;
           }
 
-          const { data: publicData } = supabase.storage.from(BUCKET_ID).getPublicUrl(filePath);
-          metadata.fileURL = publicData.publicUrl;
-          metadata.filePath = filePath;
+          // Get public URL
+          const { data: publicUrlData } = supabase.storage
+            .from(BUCKET_NAME)
+            .getPublicUrl(filePath);
+
+          if (publicUrlData && publicUrlData.publicUrl) {
+            metadata.fileURL = publicUrlData.publicUrl;
+            metadata.fileName = file.name;
+            metadata.fileSize = file.size;
+            metadata.filePath = filePath;
+          } else {
+            console.warn('Could not get public URL for uploaded file');
+          }
 
           uploadProgressBar.style.width = '100%';
           uploadProgressBar.innerText = '100%';
-          await new Promise(res => setTimeout(res, 350));
+          await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause to show 100%
           uploadProgress.style.display = 'none';
         }
 
+        // Save to Firestore
         await db.collection('assignments').add(metadata);
-        showAlert('Assignment created successfully!', 'success');
+        
+        showAlert('✅ Assignment created successfully!', 'success');
         form.reset();
+        
+        // Reset form fields if they were locked
+        if (courseCodeInput.readOnly) {
+          courseCodeInput.readOnly = false;
+          courseTitleInput.readOnly = false;
+        }
+
       } catch(err) {
-        console.error(err);
+        console.error('Assignment creation error:', err);
         uploadProgress.style.display = 'none';
-        showAlert('Error creating assignment: ' + (err.message || err), 'danger');
+        showAlert('Error creating assignment: ' + (err.message || 'Please try again'), 'danger');
+      } finally {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-plus-circle"></i> Create Assignment';
       }
     });
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('deadlineDate').min = today;
+
   })();
   </script>
 
