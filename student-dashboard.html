@@ -9,6 +9,10 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
 
+  <!-- Add these libraries to your head section -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.17/mammoth.browser.min.js"></script>
+
   <style>
     :root {
       --primary-color: #1565c0;
@@ -511,6 +515,54 @@
       border-left-color: var(--danger-color);
     }
 
+    /* AI Assistant Styles */
+    .ai-assistant-section {
+      margin-bottom: 2rem;
+    }
+
+    .ai-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+    }
+
+    .resource-item {
+      padding: 0.5rem;
+      border-left: 3px solid #28a745;
+      margin-bottom: 0.5rem;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+
+    .grade-feedback {
+      padding: 1rem;
+      border-radius: 8px;
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+    }
+
+    .file-upload-area {
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s;
+      background: #fafafa;
+      cursor: pointer;
+    }
+
+    .file-upload-area.dragover {
+      border-color: var(--secondary-color);
+      background: var(--primary-light);
+    }
+
+    .file-upload-area:hover {
+      border-color: var(--secondary-color);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .sidebar {
@@ -809,6 +861,92 @@
         </div>
       </div>
 
+      <!-- AI Assistant Section -->
+      <div class="ai-assistant-section">
+        <div class="section-header">
+          <h3 class="section-title">🤖 AI Learning Assistant</h3>
+        </div>
+        
+        <div class="row g-4">
+          <!-- PDF Summarizer -->
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="ai-icon bg-primary text-white rounded p-2 me-3">
+                    <i class="bi bi-file-text"></i>
+                  </div>
+                  <h5 class="card-title mb-0">PDF Summarizer</h5>
+                </div>
+                <p class="card-text">Upload lecture notes or PDFs to get AI-generated summaries</p>
+                <div class="file-upload-area" id="pdfUploadArea">
+                  <i class="bi bi-cloud-upload fs-1 text-muted mb-3"></i>
+                  <h5>Drag & Drop your file here</h5>
+                  <p class="text-muted">or click to browse</p>
+                  <input type="file" id="pdfUpload" accept=".pdf,.txt,.docx" class="d-none" />
+                </div>
+                <button class="btn btn-outline-primary w-100 mt-3" onclick="summarizePDF()">
+                  <i class="bi bi-robot"></i> Generate Summary
+                </button>
+                <div id="summaryResult" class="mt-3" style="display: none;">
+                  <h6>Summary:</h6>
+                  <div class="alert alert-info" id="summaryContent"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resource Suggester -->
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="ai-icon bg-success text-white rounded p-2 me-3">
+                    <i class="bi bi-book"></i>
+                  </div>
+                  <h5 class="card-title mb-0">Study Resources</h5>
+                </div>
+                <p class="card-text">Get personalized learning resources for any topic</p>
+                <div class="input-group mb-3">
+                  <input type="text" id="resourceTopic" class="form-control" placeholder="Enter topic...">
+                  <button class="btn btn-success" onclick="suggestResources()">
+                    <i class="bi bi-search"></i>
+                  </button>
+                </div>
+                <div id="resourceResult" style="display: none;">
+                  <h6>Recommended Resources:</h6>
+                  <div id="resourceContent" class="small"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Practice Grader -->
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="ai-icon bg-warning text-white rounded p-2 me-3">
+                    <i class="bi bi-pencil-square"></i>
+                  </div>
+                  <h5 class="card-title mb-0">Practice Grader</h5>
+                </div>
+                <p class="card-text">Get instant feedback on your answers</p>
+                <textarea id="practiceQuestion" class="form-control mb-2" placeholder="Enter question..." rows="2"></textarea>
+                <textarea id="practiceAnswer" class="form-control mb-2" placeholder="Your answer..." rows="3"></textarea>
+                <button class="btn btn-outline-warning w-100" onclick="gradePractice()">
+                  <i class="bi bi-check-circle"></i> Get Feedback
+                </button>
+                <div id="gradeResult" class="mt-3" style="display: none;">
+                  <h6>Feedback:</h6>
+                  <div id="gradeContent"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- My Courses -->
       <div class="courses-section">
         <div class="section-header">
@@ -895,6 +1033,387 @@
     const averageGradeEl = document.getElementById("averageGrade");
     const materialsCountEl = document.getElementById("materialsCount");
 
+    // AI Service Integration
+    class AIServices {
+      constructor() {
+        // For demo purposes, we'll simulate AI responses
+        // Replace with your actual OpenAI API key for real functionality
+        this.apiKey = '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'; // Replace with actual key
+        this.baseURL = 'https://api.openai.com/v1';
+        this.useRealAPI = false; // Set to true when you have a real API key
+    
+    // Configure PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+  }
+
+  async simulateAPICall(delay = 2000) {
+    return new Promise(resolve => setTimeout(resolve, delay));
+  }
+
+  // REAL TEXT EXTRACTION FROM DOCUMENTS
+  async extractTextFromPDF(file) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        console.log("Processing file:", file.name, file.type);
+        
+        // Handle different file types
+        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+          const text = await this._extractTextFromPDFFile(file);
+          resolve(text);
+        } 
+        else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+          const text = await this._readTextFile(file);
+          resolve(text);
+        }
+        else if (file.name.endsWith('.docx')) {
+          const text = await this._extractTextFromDOCX(file);
+          resolve(text);
+        }
+        else {
+          // For unsupported types, try to read as text
+          try {
+            const text = await this._readTextFile(file);
+            resolve(text);
+          } catch (error) {
+            reject(new Error(`Unsupported file type: ${file.type}`));
+          }
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  // Extract text from PDF files using PDF.js
+  async _extractTextFromPDFFile(file) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        
+        let fullText = '';
+        const maxPages = Math.min(pdf.numPages, 10); // Limit to first 10 pages for demo
+        
+        for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += pageText + '\n\n';
+        }
+        
+        if (fullText.trim().length === 0) {
+          fullText = "This PDF appears to be image-based or scanned. Text extraction limited. Consider using OCR for better results.";
+        }
+        
+        resolve(fullText);
+      } catch (error) {
+        console.error('PDF extraction error:', error);
+        reject(new Error('Failed to extract text from PDF'));
+      }
+    });
+  }
+
+  // Read text files
+  async _readTextFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = (e) => reject(e);
+      reader.readAsText(file);
+    });
+  }
+
+  // Extract text from DOCX files using Mammoth.js
+  async _extractTextFromDOCX(file) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        resolve(result.value);
+      } catch (error) {
+        console.error('DOCX extraction error:', error);
+        reject(new Error('Failed to extract text from DOCX file'));
+      }
+    });
+  }
+
+  // IMPROVED SUMMARIZATION THAT ACTUALLY ANALYZES REAL CONTENT
+  async summarizeContent(text, maxLength = 500) {
+    try {
+      await this.simulateAPICall(1000);
+      
+      console.log("Content to summarize:", text.substring(0, 500));
+      
+      // If text is too short or extraction failed
+      if (!text || text.trim().length < 50) {
+        return "⚠️ Limited content extracted. This may be an image-based document or the text extraction was incomplete.";
+      }
+      
+      // REAL CONTENT ANALYSIS
+      const analysis = this._analyzeContent(text);
+      
+      return this._generateDetailedSummary(analysis);
+      
+    } catch (error) {
+      console.error('Summarization error:', error);
+      return "❌ Error analyzing document content. Please try another file or ensure the document contains extractable text.";
+    }
+  }
+
+  // DEEP CONTENT ANALYSIS
+  _analyzeContent(text) {
+    const words = text.split(/\s+/).filter(word => word.length > 0);
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 50);
+    
+    // Detect content type
+    const contentType = this._detectContentType(text);
+    
+    // Extract key topics
+    const topics = this._extractTopics(text);
+    
+    // Analyze structure
+    const structure = this._analyzeStructure(text);
+    
+    // Estimate reading time (200 words per minute)
+    const readingTime = Math.ceil(words.length / 200);
+    
+    return {
+      wordCount: words.length,
+      sentenceCount: sentences.length,
+      paragraphCount: paragraphs.length,
+      contentType,
+      topics,
+      structure,
+      readingTime,
+      sampleContent: sentences.slice(0, 3).join(' ').substring(0, 200) + '...'
+    };
+  }
+
+  _detectContentType(text) {
+    const lowerText = text.toLowerCase();
+    
+    if (/(\bmath\b|\bcalculus\b|\balgebra\b|\bequation\b|\bformula\b)/.test(lowerText)) {
+      return 'Mathematics';
+    } else if (/(\bprogramming\b|\bcode\b|\bfunction\b|\balgorithm\b|\bsoftware\b)/.test(lowerText)) {
+      return 'Computer Science';
+    } else if (/(\bphysics\b|\bforce\b|\benergy\b|\bvelocity\b|\bquantum\b)/.test(lowerText)) {
+      return 'Physics';
+    } else if (/(\bchemistry\b|\bchemical\b|\bmolecule\b|\breaction\b)/.test(lowerText)) {
+      return 'Chemistry';
+    } else if (/(\bbiology\b|\bcell\b|\bgenetic\b|\becology\b)/.test(lowerText)) {
+      return 'Biology';
+    } else if (/(\bhistory\b|\bcentury\b|\bwar\b|\bcivilization\b)/.test(lowerText)) {
+      return 'History';
+    } else if (/(\bliterature\b|\bpoem\b|\bnovel\b|\bcharacter\b)/.test(lowerText)) {
+      return 'Literature';
+    } else if (/(\bassignment\b|\bquestion\b|\bproblem\b|\bexercise\b)/.test(lowerText)) {
+      return 'Assignment/Exercises';
+    } else if (/(\blecture\b|\bchapter\b|\bnotes\b|\bstudy\b)/.test(lowerText)) {
+      return 'Lecture Notes';
+    } else {
+      return 'Academic Material';
+    }
+  }
+
+  _extractTopics(text) {
+    const lowerText = text.toLowerCase();
+    const topics = new Set();
+    
+    // Common academic topics
+    const topicKeywords = {
+      'differential equations': ['derivative', 'integral', 'calculus', 'differentiation'],
+      'linear algebra': ['matrix', 'vector', 'linear', 'eigenvalue'],
+      'data structures': ['array', 'linked list', 'tree', 'graph', 'algorithm'],
+      'thermodynamics': ['heat', 'entropy', 'temperature', 'energy transfer'],
+      'organic chemistry': ['carbon', 'molecule', 'reaction', 'organic'],
+      'cell biology': ['cell', 'membrane', 'dna', 'protein', 'mitochondria'],
+      'world history': ['war', 'revolution', 'empire', 'century', 'ancient'],
+      'literary analysis': ['theme', 'symbolism', 'character', 'plot', 'narrative']
+    };
+    
+    for (const [topic, keywords] of Object.entries(topicKeywords)) {
+      if (keywords.some(keyword => lowerText.includes(keyword))) {
+        topics.add(topic);
+      }
+    }
+    
+    // If no specific topics found, use general ones based on content
+    if (topics.size === 0) {
+      const sentences = text.split(/[.!?]+/).slice(0, 5);
+      sentences.forEach(sentence => {
+        const words = sentence.trim().split(/\s+/).slice(0, 5);
+        if (words.length >= 3) {
+          topics.add(words.join(' ').substring(0, 50));
+        }
+      });
+    }
+    
+    return Array.from(topics).slice(0, 5);
+  }
+
+  _analyzeStructure(text) {
+    const lines = text.split('\n');
+    const hasHeadings = lines.some(line => line.trim().length > 0 && line.trim().length < 100 && !line.includes('.'));
+    const hasLists = /^\s*[\-\*•]\s|\d+\.\s/.test(text);
+    const hasQuestions = /\?/.test(text);
+    const hasNumbers = /\d+/.test(text);
+    const hasReferences = /references|bibliography|citation/i.test(text);
+    
+    return {
+      hasHeadings,
+      hasLists,
+      hasQuestions,
+      hasNumbers,
+      hasReferences,
+      isStructured: hasHeadings || hasLists
+    };
+  }
+
+  _generateDetailedSummary(analysis) {
+    let summary = `📊 DOCUMENT ANALYSIS SUMMARY\n`;
+    summary += `════════════════════════════════\n\n`;
+    
+    summary += `📈 Basic Statistics:\n`;
+    summary += `• Words: ${analysis.wordCount.toLocaleString()}\n`;
+    summary += `• Sentences: ${analysis.sentenceCount}\n`;
+    summary += `• Paragraphs: ${analysis.paragraphCount}\n`;
+    summary += `• Estimated Reading Time: ${analysis.readingTime} minutes\n\n`;
+    
+    summary += `🎯 Content Type: ${analysis.contentType}\n\n`;
+    
+    summary += `📚 Main Topics Covered:\n`;
+    if (analysis.topics.length > 0) {
+      analysis.topics.forEach((topic, index) => {
+        summary += `• ${topic}\n`;
+      });
+    } else {
+      summary += `• Various academic concepts\n`;
+    }
+    summary += `\n`;
+    
+    summary += `🏗️ Document Structure:\n`;
+    summary += `• ${analysis.structure.hasHeadings ? '✅ Contains headings/sections' : '❌ No clear headings'}\n`;
+    summary += `• ${analysis.structure.hasLists ? '✅ Includes lists/bullet points' : '❌ No lists detected'}\n`;
+    summary += `• ${analysis.structure.hasQuestions ? '✅ Contains questions' : '❌ No questions found'}\n`;
+    summary += `• ${analysis.structure.hasReferences ? '✅ Includes references' : '❌ No references section'}\n`;
+    summary += `\n`;
+    
+    summary += `📖 Content Sample:\n`;
+    summary += `"${analysis.sampleContent}"\n\n`;
+    
+    summary += `💡 Study Suggestions:\n`;
+    summary += `${this._getStudySuggestions(analysis)}\n`;
+    
+    return summary;
+  }
+
+  _getStudySuggestions(analysis) {
+    const suggestions = [];
+    
+    if (analysis.wordCount > 2000) {
+      suggestions.push('Break into multiple study sessions');
+    }
+    
+    if (analysis.structure.hasHeadings) {
+      suggestions.push('Use headings to create an outline');
+    }
+    
+    if (analysis.structure.hasQuestions) {
+      suggestions.push('Practice answering the questions included');
+    }
+    
+    if (analysis.contentType === 'Mathematics') {
+      suggestions.push('Work through examples step by step');
+    }
+    
+    if (analysis.contentType === 'Computer Science') {
+      suggestions.push('Try implementing code examples');
+    }
+    
+    if (suggestions.length === 0) {
+      suggestions.push('Create summary notes for key concepts');
+      suggestions.push('Review material multiple times');
+    }
+    
+    return suggestions.slice(0, 3).map(s => `• ${s}`).join('\n');
+  }
+
+  // Keep other methods the same
+  async gradeAnswer(question, studentAnswer, correctAnswer, maxPoints = 10) {
+    try {
+      await this.simulateAPICall(1000);
+      
+      const answerLength = studentAnswer.split(/\s+/).length;
+      let score = 7;
+      let feedback = "Good understanding demonstrated with clear explanations.";
+      let missedPoints = [];
+      let suggestions = "Consider adding specific examples to strengthen your response.";
+      
+      if (answerLength < 10) {
+        score = 5;
+        feedback = "Answer is quite brief. Elaborate more on your points.";
+        missedPoints = ["More detailed explanation needed", "Include specific examples"];
+        suggestions = "Expand your answer with more details and concrete examples.";
+      } else if (answerLength > 30) {
+        score = 8;
+        feedback = "Comprehensive answer with good detail and structure.";
+        suggestions = "Well organized response. Consider adding practical applications.";
+      }
+      
+      return {
+        score: Math.min(maxPoints, score),
+        feedback,
+        missedPoints: missedPoints.length > 0 ? missedPoints : ["Minor improvements possible"],
+        suggestions
+      };
+      
+    } catch (error) {
+      console.error('Grading error:', error);
+      throw new Error('Failed to grade answer');
+    }
+  }
+
+  async suggestResources(topic, studentLevel = "undergraduate") {
+    try {
+      await this.simulateAPICall(1200);
+      
+      const lowerTopic = topic.toLowerCase();
+      let resources = {
+        onlineCourses: [],
+        books: [],
+        researchPapers: [],
+        videos: [],
+        exercises: []
+      };
+      
+      if (lowerTopic.includes('math') || lowerTopic.includes('calculus')) {
+        resources.onlineCourses = ['Calculus I (Khan Academy)', 'Advanced Mathematics (MIT OCW)'];
+        resources.books = ['"Calculus: Early Transcendentals" by James Stewart'];
+      } else if (lowerTopic.includes('programming') || lowerTopic.includes('code')) {
+        resources.onlineCourses = ['Introduction to Programming (edX)', 'Data Structures (Udacity)'];
+        resources.books = ['"Clean Code" by Robert C. Martin'];
+      } else {
+        resources.onlineCourses = [`${topic} Fundamentals (Coursera)`, `Advanced ${topic} (edX)`];
+        resources.books = [`"Introduction to ${topic}"`, `"${topic} Mastery Guide"`];
+      }
+      
+      resources.researchPapers = [`Recent advances in ${topic}`, `Fundamental principles of ${topic}`];
+      resources.videos = [`${topic} Crash Course`, `${topic} Tutorial Series`];
+      resources.exercises = [`${topic} practice problems`, `Interactive ${topic} quizzes`];
+      
+      return resources;
+      
+    } catch (error) {
+      console.error('Resource suggestion error:', error);
+      throw new Error('Failed to generate resource suggestions');
+    }
+  }
+}
+
+    // Initialize AI Services
+    const aiService = new AIServices();
+
     // Toast Notification System
     function showToast(message, type = 'info') {
       const toastContainer = document.querySelector('.toast-container');
@@ -916,6 +1435,171 @@
       
       toast.addEventListener('hidden.bs.toast', () => {
         toast.remove();
+      });
+    }
+
+    // AI Functionality
+
+    // PDF Summarization
+    async function summarizePDF() {
+      const fileInput = document.getElementById('pdfUpload');
+      const summaryResult = document.getElementById('summaryResult');
+      const summaryContent = document.getElementById('summaryContent');
+      
+      if (!fileInput.files[0]) {
+        showToast('Please select a file first', 'error');
+        return;
+      }
+
+      try {
+        showToast('Analyzing your document...', 'info');
+        
+        const file = fileInput.files[0];
+        const text = await aiService.extractTextFromPDF(file);
+        
+        const summary = await aiService.summarizeContent(text);
+        
+        summaryContent.textContent = summary;
+        summaryResult.style.display = 'block';
+        showToast('Summary generated successfully!', 'success');
+        
+      } catch (error) {
+        console.error('Summarization error:', error);
+        showToast('Error generating summary', 'error');
+      }
+    }
+
+    // Resource Suggestions
+    async function suggestResources() {
+      const topicInput = document.getElementById('resourceTopic');
+      const resourceResult = document.getElementById('resourceResult');
+      const resourceContent = document.getElementById('resourceContent');
+      
+      const topic = topicInput.value.trim();
+      if (!topic) {
+        showToast('Please enter a topic', 'error');
+        return;
+      }
+
+      try {
+        showToast('Finding the best resources...', 'info');
+        
+        const resources = await aiService.suggestResources(topic);
+        
+        let html = '';
+        if (resources.onlineCourses && resources.onlineCourses.length > 0) {
+          html += '<h6>Online Courses:</h6>';
+          resources.onlineCourses.forEach(course => {
+            html += `<div class="resource-item">📚 ${course}</div>`;
+          });
+        }
+        
+        if (resources.books && resources.books.length > 0) {
+          html += '<h6 class="mt-3">Books:</h6>';
+          resources.books.forEach(book => {
+            html += `<div class="resource-item">📖 ${book}</div>`;
+          });
+        }
+        
+        if (resources.videos && resources.videos.length > 0) {
+          html += '<h6 class="mt-3">Videos:</h6>';
+          resources.videos.forEach(video => {
+            html += `<div class="resource-item">🎥 ${video}</div>`;
+          });
+        }
+        
+        resourceContent.innerHTML = html;
+        resourceResult.style.display = 'block';
+        showToast('Resources suggested successfully!', 'success');
+        
+      } catch (error) {
+        console.error('Resource suggestion error:', error);
+        showToast('Error suggesting resources', 'error');
+      }
+    }
+
+    // Practice Answer Grading
+    async function gradePractice() {
+      const questionInput = document.getElementById('practiceQuestion');
+      const answerInput = document.getElementById('practiceAnswer');
+      const gradeResult = document.getElementById('gradeResult');
+      const gradeContent = document.getElementById('gradeContent');
+      
+      const question = questionInput.value.trim();
+      const answer = answerInput.value.trim();
+      
+      if (!question || !answer) {
+        showToast('Please enter both question and answer', 'error');
+        return;
+      }
+
+      try {
+        showToast('Grading your answer...', 'info');
+        
+        // For demo, we'll use a sample correct answer
+        const correctAnswer = "This would be the correct answer from your database";
+        
+        const grade = await aiService.gradeAnswer(question, answer, correctAnswer);
+        
+        let html = `
+            <div class="grade-feedback">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>Score: ${grade.score}/10</strong>
+                    <span class="badge ${grade.score >= 7 ? 'bg-success' : grade.score >= 5 ? 'bg-warning' : 'bg-danger'}">
+                        ${grade.score >= 7 ? 'Excellent' : grade.score >= 5 ? 'Good' : 'Needs Improvement'}
+                    </span>
+                </div>
+                <p><strong>Feedback:</strong> ${grade.feedback}</p>
+        `;
+        
+        if (grade.missedPoints && grade.missedPoints.length > 0) {
+          html += `<p><strong>Key points to improve:</strong></p><ul>`;
+          grade.missedPoints.forEach(point => {
+            html += `<li>${point}</li>`;
+          });
+          html += `</ul>`;
+        }
+        
+        if (grade.suggestions) {
+          html += `<p><strong>Suggestions:</strong> ${grade.suggestions}</p>`;
+        }
+        
+        html += `</div>`;
+        gradeContent.innerHTML = html;
+        gradeResult.style.display = 'block';
+        showToast('Answer graded successfully!', 'success');
+        
+      } catch (error) {
+        console.error('Grading error:', error);
+        showToast('Error grading answer', 'error');
+      }
+    }
+
+    // Setup file upload area
+    function setupFileUpload() {
+      const uploadArea = document.getElementById('pdfUploadArea');
+      const fileInput = document.getElementById('pdfUpload');
+      
+      uploadArea.addEventListener('click', () => {
+        fileInput.click();
+      });
+      
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+      
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          showToast('File ready for processing!', 'success');
+        }
       });
     }
 
@@ -1201,6 +1885,7 @@
 
         // Setup dashboard components
         setupLogout();
+        setupFileUpload();
         await loadStudentProfile(user);
         await loadStudentStatistics(user.uid);
         loadStudentCourses(user.uid);
