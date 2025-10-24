@@ -19,6 +19,33 @@
       flex-direction: column;
     }
 
+    /* Navigation Bar */
+    .navbar {
+      background: linear-gradient(135deg, #1565c0, #0d47a1);
+      padding: 1rem 0;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    }
+    .navbar-brand {
+      color: white !important;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    .navbar-nav .nav-link {
+      color: rgba(255,255,255,0.9) !important;
+      margin: 0 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    .navbar-nav .nav-link:hover {
+      background: rgba(255,255,255,0.15);
+      color: white !important;
+    }
+    .navbar-nav .nav-link.active {
+      background: rgba(255,255,255,0.2);
+      color: white !important;
+    }
+
     .header {
       text-align: center;
       padding: 2rem 1rem 1rem;
@@ -116,6 +143,53 @@
 </head>
 
 <body>
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="lecturer-dashboard.html">
+      <i class="bi bi-mortarboard-fill"></i> Lecturer Portal
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" style="background: white;">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="lecturer-dashboard.html">
+            <i class="bi bi-house-door"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="upload-materials.html">
+            <i class="bi bi-upload"></i> Upload Materials
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="view-materials.html">
+            <i class="bi bi-folder2-open"></i> View Materials
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="assignment_page.html">
+            <i class="bi bi-pencil-square"></i> Assignments
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="announcements.html">
+            <i class="bi bi-megaphone"></i> Announcements
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="forum.html">
+            <i class="bi bi-chat-dots"></i> Forum
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
   <div class="header">
     <img src="school.jpg" alt="School Logo" />
     <h4>Federal College of Fisheries & Marine Technology</h4>

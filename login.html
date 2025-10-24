@@ -98,6 +98,15 @@
       text-decoration: underline;
     }
 
+    .btn .spinner-border {
+      vertical-align: text-bottom;
+    }
+
+    .alert {
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+
     @media (max-width: 768px) {
       .login-container {
         flex-direction: column;
@@ -119,6 +128,10 @@
   <!-- Right side form -->
   <div class="login-right">
     <h3>Login</h3>
+    
+    <!-- Alert container -->
+    <div id="alert-container"></div>
+    
     <form id="login-form">
       <div class="mb-3">
         <label for="email" class="form-label"><i class="bi bi-envelope-fill"></i> Email</label>
@@ -128,7 +141,10 @@
         <label for="password" class="form-label"><i class="bi bi-lock-fill"></i> Password</label>
         <input type="password" id="password" class="form-control" placeholder="Enter password" required>
       </div>
-      <button type="submit" class="btn btn-primary w-100">Login</button>
+      <button type="submit" id="login-btn" class="btn btn-primary w-100">
+        <span id="login-btn-text">Login</span>
+        <span id="login-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+      </button>
     </form>
     <p class="text-center mt-3">Don't have an account? <a href="signup.html">Sign Up</a></p>
   </div>
@@ -158,16 +174,53 @@ window.onload = function() {
   const db = firebase.firestore();
 
   const loginForm = document.getElementById('login-form');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const loginBtn = document.getElementById('login-btn');
+  const loginBtnText = document.getElementById('login-btn-text');
+  const loginSpinner = document.getElementById('login-spinner');
+  const alertContainer = document.getElementById('alert-container');
+
+  // Show alert message
+  function showAlert(message, type = 'danger') {
+    alertContainer.innerHTML = `
+      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `;
+  }
+
+  // Toggle loading state
+  function setLoading(isLoading) {
+    emailInput.disabled = isLoading;
+    passwordInput.disabled = isLoading;
+    loginBtn.disabled = isLoading;
+
+    if (isLoading) {
+      loginBtnText.textContent = 'Logging in...';
+      loginSpinner.classList.remove('d-none');
+    } else {
+      loginBtnText.textContent = 'Login';
+      loginSpinner.classList.add('d-none');
+    }
+  }
 
   loginForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
 
     if(!email || !password) {
-      alert("Please enter email and password.");
+      showAlert("Please enter email and password.");
       return;
     }
+
+    // Clear previous alerts
+    alertContainer.innerHTML = '';
+    
+    // Enable loading state
+    setLoading(true);
 
     auth.signInWithEmailAndPassword(email, password)
       .then(userCredential => {
@@ -179,7 +232,6 @@ window.onload = function() {
       .then(docSnap => {
         if (docSnap.exists) {
           const role = docSnap.data().role;
-          alert("Login successful! Role: " + role);
 
           // Redirect based on role
           if(role === "admin") {
@@ -191,12 +243,14 @@ window.onload = function() {
           }
 
         } else {
-          alert("User data not found in database.");
+          setLoading(false);
+          showAlert("User data not found in database.");
         }
       })
       .catch(error => {
         console.error(error);
-        alert("Error: " + error.message);
+        setLoading(false);
+        showAlert("Error: " + error.message);
       });
   });
 };

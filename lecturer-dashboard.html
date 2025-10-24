@@ -302,11 +302,11 @@ onAuthStateChanged(auth, user => {
             <small class="text-muted">👥 Students: ${studentsCount} | 🕒 Created: ${createdAt}</small>
           </div>
           <div class="d-flex align-items-center gap-2">
-            <div class="dropdown">
+            <div class=" btn-primary dropdown">
               <button class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">Manage</button>
               <ul class="dropdown-menu">
-                <li><a class="dropdown-item manage-option" data-page="upload-materials.html">Upload Materials</a></li>
-                <li><a class="dropdown-item manage-option" data-page="assignment_page.html">Assignments / Quizzes</a></li>
+                <li><a class="dropdown-item manage-option btn pointer:cursor" data-page="upload-materials.html">Upload Materials</a></li>
+                <li><a class="dropdown-item manage-option btn pointer:cursor " data-page="assignment_page.html">Assignments / Quizzes</a></li>
               </ul>
             </div>
             <button class="btn btn-sm btn-outline-danger delete-course">Delete</button>
