@@ -876,7 +876,7 @@ async function loadCourses(){
       <td>${joined}</td>
       <td>${createdAt.toLocaleDateString()}</td>
       <td>
-        <button class="btn btn-sm btn-ghost me-1" onclick="viewCourseMembers('${d.id}')">
+        <button class="btn btn-sm btn-outline-primary me-1" onclick="viewCourseMembers('${d.id}')">
           <i class="bi bi-people-fill"></i> View Members
         </button>
         <button class="btn btn-sm btn-danger" onclick="deleteCourse('${d.id}')">
@@ -1035,7 +1035,7 @@ async function loadMaterials(){
         </span>
       </td>
       <td>
-        <a href="${data.fileURL || '#'}" target="_blank" class="btn btn-sm btn-ghost me-1" ${!data.fileURL ? 'disabled' : ''}>
+        <a href="${data.fileURL || '#'}" target="_blank" class="btn btn-sm btn-outline-primary me-1" ${!data.fileURL ? 'disabled' : ''}>
           <i class="bi bi-eye-fill"></i> View
         </a>
         <button class="btn btn-sm btn-danger" onclick="deleteMaterial('${d.id}', '${data.filePath || ''}')">
