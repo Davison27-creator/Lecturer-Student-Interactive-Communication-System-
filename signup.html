@@ -36,7 +36,7 @@
 
     .signup-left {
       flex: 1;
-      background: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80') center/cover no-repeat;
+      background: url('log.jpg') center/cover no-repeat;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -91,15 +91,6 @@
       text-decoration: underline;
     }
 
-    .btn .spinner-border {
-      vertical-align: text-bottom;
-    }
-
-    .alert {
-      border-radius: 10px;
-      margin-bottom: 1rem;
-    }
-
     @media (max-width: 768px) {
       .signup-container {
         flex-direction: column;
@@ -126,10 +117,6 @@
   <!-- Right side with form -->
   <div class="signup-right">
     <h3>Create Your Account</h3>
-    
-    <!-- Alert container -->
-    <div id="alert-container"></div>
-    
     <form id="signup-form">
       <div class="mb-3">
         <label for="name" class="form-label"><i class="bi bi-person-fill"></i> Full Name</label>
@@ -156,12 +143,10 @@
       <div class="mb-3" id="lecturerCodeBox">
         <label for="lecturerCode" class="form-label"><i class="bi bi-shield-lock-fill"></i> Lecturer Access Code</label>
         <input type="text" id="lecturerCode" class="form-control" placeholder="Enter lecturer access code">
+        <p class="small margin-4">Enter the Access Code given to you by the Administrator.</p>
       </div>
 
-      <button type="submit" id="signup-btn" class="btn btn-primary w-100">
-        <span id="signup-btn-text">Sign Up</span>
-        <span id="signup-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
-      </button>
+      <button type="submit" class="btn btn-primary w-100">Sign Up</button>
     </form>
     <p class="text-center mt-3">Already have an account? <a href="login.html">Login</a></p>
   </div>
@@ -192,83 +177,37 @@
   // ✅ Access code constant (change this to your real one)
   const LECTURER_ACCESS_CODE = "LECTURER@FCFMT";
 
-  // Get form elements
-  const signupForm = document.getElementById('signup-form');
-  const nameInput = document.getElementById('name');
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const roleSelect = document.getElementById('role');
-  const lecturerCodeInput = document.getElementById('lecturerCode');
-  const signupBtn = document.getElementById('signup-btn');
-  const signupBtnText = document.getElementById('signup-btn-text');
-  const signupSpinner = document.getElementById('signup-spinner');
-  const alertContainer = document.getElementById('alert-container');
-
-  // Show alert message
-  function showAlert(message, type = 'danger') {
-    alertContainer.innerHTML = `
-      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    `;
-  }
-
-  // Toggle loading state
-  function setLoading(isLoading) {
-    nameInput.disabled = isLoading;
-    emailInput.disabled = isLoading;
-    passwordInput.disabled = isLoading;
-    roleSelect.disabled = isLoading;
-    lecturerCodeInput.disabled = isLoading;
-    signupBtn.disabled = isLoading;
-
-    if (isLoading) {
-      signupBtnText.textContent = 'Creating Account...';
-      signupSpinner.classList.remove('d-none');
-    } else {
-      signupBtnText.textContent = 'Sign Up';
-      signupSpinner.classList.add('d-none');
-    }
-  }
-
   // ✅ Show or hide access code input based on role
-  roleSelect.addEventListener("change", (e) => {
+  document.getElementById("role").addEventListener("change", (e) => {
     const role = e.target.value;
     const codeBox = document.getElementById("lecturerCodeBox");
     codeBox.style.display = role === "lecturer" ? "block" : "none";
   });
 
   // ✅ Handle Signup
-  signupForm.addEventListener("submit", async (e) => {
+  document.getElementById("signup-form").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-    const role = roleSelect.value.trim().toLowerCase();
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const role = document.getElementById("role").value.trim().toLowerCase();
 
     // Strict role validation
     const allowedRoles = ["student", "lecturer"];
     if (!allowedRoles.includes(role)) {
-      showAlert("Invalid role selected. Only 'Student' or 'Lecturer' can sign up.");
+      alert("⚠️ Invalid role selected. Only 'Student' or 'Lecturer' can sign up.");
       return;
     }
 
     // ✅ Check access code for lecturer
     if (role === "lecturer") {
-      const enteredCode = lecturerCodeInput.value.trim();
+      const enteredCode = document.getElementById("lecturerCode").value.trim();
       if (enteredCode !== LECTURER_ACCESS_CODE) {
-        showAlert("Invalid Lecturer Access Code. Contact admin for assistance.");
+        alert("❌ Invalid Lecturer Access Code. Contact admin for assistance.");
         return;
       }
     }
-
-    // Clear previous alerts
-    alertContainer.innerHTML = '';
-    
-    // Enable loading state
-    setLoading(true);
 
     try {
       // Create Firebase Auth user
@@ -283,15 +222,15 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
 
-      // Redirect to login
+      alert("✅ Account created successfully! Redirecting to login...");
       window.location.href = "login.html";
     } catch (error) {
       console.error("Signup Error:", error);
-      setLoading(false);
-      showAlert(error.message);
+      alert(`❌ Error: ${error.message}`);
     }
   });
 </script>
 
 </body>
 </html>
+  
